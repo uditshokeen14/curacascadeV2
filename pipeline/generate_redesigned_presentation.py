@@ -1313,15 +1313,17 @@ def build_slide_12_exploratory_analytics(prs):
     p.space_before = Pt(2)
 
     p = tf2.add_paragraph()
-    p.text = "• Overall Median Latency: 2.82 Years (Full Corpus) / 6.0 Years (Showcase Benchmark)\n• Cumulative Patient-Years at Risk: 202.5 Years across active uncorrected findings\n• Subgroup Kinetics: Class A Refuted (6.22 yrs) vs Class B Limited (5.10 yrs, p < 0.001)"
+    p.text = "• Overall Median Latency: 2.82 Years (1,087d IQR) across 51,007 observations (536 genes)\n• Cumulative Patient-Years at Risk: 182,760.4 Years across 51,251 findings\n• Submitter Kinetics: Class A Refuted (2.80 yrs) vs Class B Limited (3.77 yrs, p < 0.001)"
     p.font.size = Pt(9)
     p.font.color.rgb = ALERT_GREEN
     p.space_before = Pt(3)
 
-    # Right Bottom: Real Live Cumulative Latency Empirical CDF Curve
-    s6_img = SCREENSHOT_DIR / "cropped_s6_latency_cdf_curve.png"
-    if s6_img.exists():
-        slide.shapes.add_picture(str(s6_img), Inches(6.8), Inches(4.35), width=Inches(5.73))
+    # Right Bottom: Real Live Full Corpus Discrepancy Latency Strata Chart
+    s24_img = SCREENSHOT_DIR / "cropped_s24_full_corpus_discrepancy_strata.png"
+    if not s24_img.exists():
+        s24_img = SCREENSHOT_DIR / "cropped_s6_latency_cdf_curve.png"
+    if s24_img.exists():
+        slide.shapes.add_picture(str(s24_img), Inches(6.8), Inches(4.35), width=Inches(5.73))
     else:
         add_card(slide, 6.8, 4.35, 5.73, 2.45, SURFACE_NAVY, SURFACE_BORDER)
 
