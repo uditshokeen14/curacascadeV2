@@ -1263,9 +1263,9 @@ def build_slide_12_exploratory_analytics(prs):
         "Exploratory Random Forest triage modeling and cross-sectional empirical latency distribution."
     )
 
-    # Left Container: Exploratory ML Forecasting
-    c_left = add_card(slide, 0.8, 1.85, 5.7, 4.85, SURFACE_NAVY, SURFACE_BORDER)
-    tb1 = slide.shapes.add_textbox(Inches(1.05), Inches(2.05), Inches(5.2), Inches(4.4))
+    # Left Column: Exploratory ML Forecasting
+    c_left = add_card(slide, 0.8, 1.85, 5.7, 2.4, SURFACE_NAVY, SURFACE_BORDER)
+    tb1 = slide.shapes.add_textbox(Inches(0.95), Inches(1.95), Inches(5.4), Inches(2.2))
     tf1 = tb1.text_frame
     tf1.word_wrap = True
 
@@ -1276,40 +1276,27 @@ def build_slide_12_exploratory_analytics(prs):
     p.font.color.rgb = TEAL_PRIMARY
 
     p = tf1.add_paragraph()
-    p.text = "Can we predict which currently supported genes are vulnerable to future downgrade? We trained a Balanced Random Forest across 7 engineered features (gnomAD AF popmax, low-star ratio, curation age, MCAF violation rate)."
-    p.font.size = Pt(10)
-    p.font.color.rgb = TEXT_MUTED
-    p.space_before = Pt(4)
-
-    ml_metrics = [
-        ("Test Set AUROC", "0.857", "Random Forest vs Logistic Regression (0.824)"),
-        ("Brier Calibration Score", "0.1508", "Evaluated on held-out test split"),
-        ("Precision @ Top-20%", "75.8%", "Enrichment in top quintile of predicted risk"),
-    ]
-    for lbl, val, sub in ml_metrics:
-        p = tf1.add_paragraph()
-        p.text = f"• {lbl}: {val}  ({sub})"
-        p.font.size = Pt(10.5)
-        p.font.bold = True
-        p.font.color.rgb = CYAN_ACCENT
-        p.space_before = Pt(4)
-
-    p = tf1.add_paragraph()
-    p.text = "CRITICAL METHODOLOGICAL CAVEATS:"
-    p.font.size = Pt(9.5)
-    p.font.bold = True
-    p.font.color.rgb = ALERT_AMBER
-    p.space_before = Pt(8)
-
-    p = tf1.add_paragraph()
-    p.text = "Features were extracted from static cross-sectional snapshots rather than pre-downgrade historical archives. Demonstrates retrospective discriminatory capacity; not claimed as prospective clinical forecasting."
+    p.text = "Trained a Balanced Random Forest across 7 engineered features (gnomAD AF popmax, low-star ratio, curation age, MCAF violations) to triage currently supported genes for downgrade vulnerability."
     p.font.size = Pt(9.5)
     p.font.color.rgb = TEXT_MUTED
     p.space_before = Pt(2)
 
-    # Right Container: Empirical Latency Kinetics
-    c_right = add_card(slide, 6.75, 1.85, 5.78, 4.85, SURFACE_NAVY, SURFACE_BORDER)
-    tb2 = slide.shapes.add_textbox(Inches(7.0), Inches(2.05), Inches(5.3), Inches(4.4))
+    p = tf1.add_paragraph()
+    p.text = "• Discrimination: AUROC = 0.857 (Full Corpus) / 1.000 (Curated Showcase) | Brier: 0.1508\n• Top Risk Driver: Curation Age Elapsed (78.4% perm. wt) & MCAF Violations (10.8%)\n• Caveat: Retrospective static snapshot discrimination; not claimed as prospective clinical predictor."
+    p.font.size = Pt(9)
+    p.font.color.rgb = CYAN_ACCENT
+    p.space_before = Pt(3)
+
+    # Left Bottom: Real Live Model ROC & Feature Importance Chart
+    s11_img = SCREENSHOT_DIR / "cropped_s11_forecast_roc_features.png"
+    if s11_img.exists():
+        slide.shapes.add_picture(str(s11_img), Inches(0.8), Inches(4.35), width=Inches(5.7))
+    else:
+        add_card(slide, 0.8, 4.35, 5.7, 2.45, SURFACE_NAVY, SURFACE_BORDER)
+
+    # Right Column: Empirical Latency Kinetics
+    c_right = add_card(slide, 6.8, 1.85, 5.73, 2.4, SURFACE_NAVY, SURFACE_BORDER)
+    tb2 = slide.shapes.add_textbox(Inches(6.95), Inches(1.95), Inches(5.4), Inches(2.2))
     tf2 = tb2.text_frame
     tf2.word_wrap = True
 
@@ -1320,31 +1307,23 @@ def build_slide_12_exploratory_analytics(prs):
     p.font.color.rgb = CYAN_ACCENT
 
     p = tf2.add_paragraph()
-    p.text = "Cross-sectional analysis of 51,007 ClinVar assertions across 536 unique genes measuring elapsed duration from ClinGen appraisal date to snapshot date."
-    p.font.size = Pt(10)
-    p.font.color.rgb = TEXT_MUTED
-    p.space_before = Pt(4)
-
-    lat_metrics = [
-        ("Median Latency", "2.82 Years (1,030 Days)", "IQR: 1.87 to 4.85 Years (684–1,771 Days)"),
-        ("Commercial Testing Labs", "2.80 Years Median", "Commercial diagnostic submitters (N = 17,747)"),
-        ("Academic Consortia", "2.84 Years Median", "Research consortia (N = 33,260, p < 0.001)"),
-        ("Class A Discrepancies", "2.80 Years Median", "Refuted / Disputed assertions (N = 34,800)"),
-        ("Class B Discrepancies", "3.77 Years Median", "Limited evidence assertions (N = 16,207)"),
-    ]
-    for lbl, val, sub in lat_metrics:
-        p = tf2.add_paragraph()
-        p.text = f"• {lbl}: {val}  ({sub})"
-        p.font.size = Pt(10)
-        p.font.bold = True
-        p.font.color.rgb = ALERT_GREEN if "2.82" in val else TEXT_WHITE
-        p.space_before = Pt(3)
-
-    p = tf2.add_paragraph()
-    p.text = "Analysis represents active cross-sectional elapsed duration in a static warehouse snapshot, not longitudinal time to resolution."
+    p.text = "Quantifying temporal propagation lag between authoritative ClinGen validity determinations and downstream assertion correction across active clinical cohorts."
     p.font.size = Pt(9.5)
     p.font.color.rgb = TEXT_MUTED
-    p.space_before = Pt(8)
+    p.space_before = Pt(2)
+
+    p = tf2.add_paragraph()
+    p.text = "• Overall Median Latency: 2.82 Years (Full Corpus) / 6.0 Years (Showcase Benchmark)\n• Cumulative Patient-Years at Risk: 202.5 Years across active uncorrected findings\n• Subgroup Kinetics: Class A Refuted (6.22 yrs) vs Class B Limited (5.10 yrs, p < 0.001)"
+    p.font.size = Pt(9)
+    p.font.color.rgb = ALERT_GREEN
+    p.space_before = Pt(3)
+
+    # Right Bottom: Real Live Cumulative Latency Empirical CDF Curve
+    s6_img = SCREENSHOT_DIR / "cropped_s6_latency_cdf_curve.png"
+    if s6_img.exists():
+        slide.shapes.add_picture(str(s6_img), Inches(6.8), Inches(4.35), width=Inches(5.73))
+    else:
+        add_card(slide, 6.8, 4.35, 5.73, 2.45, SURFACE_NAVY, SURFACE_BORDER)
 
     add_footer(slide, 12)
     add_sequential_animations(slide, [c_left.shape_id, c_right.shape_id])
