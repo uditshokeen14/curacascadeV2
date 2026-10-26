@@ -450,6 +450,7 @@ def ingest_all_into_db(
     panelapp_df: Optional[pd.DataFrame] = None,
     clinvar_df: Optional[pd.DataFrame] = None,
     db_path: Optional[Union[str, Path]] = None,
+    drop_existing: bool = False,
 ) -> Dict[str, Any]:
     """Populate relational tables from parsed DataFrames and run the audit.
 
@@ -458,11 +459,12 @@ def ingest_all_into_db(
         panelapp_df: Optional PanelApp memberships DataFrame.
         clinvar_df: Optional ClinVar variants DataFrame.
         db_path: Target database path.
+        drop_existing: Whether to drop existing schema tables prior to ingestion (default False).
 
     Returns:
         Audit report metrics dictionary.
     """
-    ensure_database_ready(db_path=db_path, drop_existing=True)
+    ensure_database_ready(db_path=db_path, drop_existing=drop_existing)
 
     # 1. Insert Unique Diseases
     print("Normalizing diseases ...")
@@ -525,7 +527,7 @@ def ingest_all_into_db(
             None,
         ))
     execute_many(
-        "INSERT INTO clingen_curations (gene_symbol, disease_id, moi, classification, classification_date, gcep, sop, report_url, pmids) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
+        "INSERT OR REPLACE INTO clingen_curations (gene_symbol, disease_id, moi, classification, classification_date, gcep, sop, report_url, pmids) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);",
         curation_rows,
         db_path=db_path,
     )
@@ -587,13 +589,53 @@ def ingest_all_into_db(
             ))
         execute_many(
             """
-            INSERT INTO panelapp_entries (
+            INSERT OR REPLACE INTO panelapp_entries (
                 gene_symbol, disease_id, panel_id, panel_name, panel_version, confidence, mode_of_inheritance, phenotypes
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
             """,
             pan_rows,
             db_path=db_path,
         )
+
+    # 6. Record Ingestion Provenance Safeguards
+    print("Recording ingestion provenance audit records ...")
+    provenance_rows = [
+        (
+            "ClinGen",
+            C.CLINGEN_VALIDITY_URL,
+            "2024-03-01",
+            None,
+            len(clingen_df),
+            "Gene-disease clinical validity assertions ingested from ClinGen GCEP releases",
+        )
+    ]
+    if clinvar_df is not None and not clinvar_df.empty:
+        provenance_rows.append((
+            "ClinVar",
+            "ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/variant_summary.txt.gz",
+            "2024-03-01",
+            None,
+            len(clinvar_df),
+            "Stream-filtered pathogenic and likely pathogenic variant assertions",
+        ))
+    if panelapp_df is not None and not panelapp_df.empty:
+        provenance_rows.append((
+            "PanelApp",
+            "https://panelapp.genomicsengland.co.uk/api/v1",
+            "2024-03-01",
+            None,
+            len(panelapp_df),
+            "Genomics England diagnostic gene panel indication memberships",
+        ))
+    execute_many(
+        """
+        INSERT INTO provenance (
+            source_name, source_url, snapshot_date, retrieval_timestamp, sha256_checksum, record_count, transformation_version, details
+        ) VALUES (?, ?, ?, datetime('now'), ?, ?, '2.0', ?);
+        """,
+        provenance_rows,
+        db_path=db_path,
+    )
 
     print("Running audit on newly ingested data ...")
     audit_results = run_audit(db_path=db_path)

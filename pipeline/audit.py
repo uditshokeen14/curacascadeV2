@@ -29,13 +29,22 @@ from database.connection import (
     execute_write,
     query_df,
 )
+from pipeline.disease_mapping import (
+    match_panel_to_curation_disease,
+    match_variant_to_curation_disease,
+)
 
 
 def run_audit(
     db_path: Optional[Union[str, Path]] = None,
     export_csv: bool = True,
 ) -> Dict[str, Any]:
-    """Execute the full cross-layer inconsistency audit and populate audit_findings.
+    """Execute the full disease-aware cross-layer inconsistency audit.
+
+    Enforces biological entity distinction:
+    - Gene, disease concept, gene-disease validity assertion, variant, panel.
+    - Prevents variants in multi-disease genes from being flagged for unrelated downgrades.
+    - Assigns match_status, confidence, and provenance to every finding.
 
     Args:
         db_path: Target SQLite database file path.
@@ -49,35 +58,21 @@ def run_audit(
     # Clean out previous audit results to ensure idempotency
     execute_write("DELETE FROM audit_findings;", db_path=db_path)
 
-    # -------------------------------------------------------------------------
-    # 1. SQL Query for Class A & Class B (ClinVar P/LP inconsistencies)
-    # -------------------------------------------------------------------------
-    # Class A: Disputed or Refuted genes + ClinVar P/LP
-    # Class B: Limited evidence genes + ClinVar P/LP
-    clinvar_audit_sql = """
+    # 1. Retrieve all downgraded ClinGen curations (Disputed, Refuted, Limited)
+    curations_sql = """
     SELECT 
+        cc.curation_id,
+        cc.gene_symbol,
+        cc.disease_id,
+        d.disease_name,
         cc.classification AS clingen_classification,
         cc.classification_date AS clingen_date,
         cc.gcep AS clingen_gcep,
-        cc.report_url AS clingen_report_url,
-        g.gene_symbol,
-        d.disease_id,
-        d.disease_name,
-        cv.variation_id,
-        cv.variant_name,
-        cv.clinical_significance,
-        cv.stars,
-        cv.review_status,
-        cv.num_submitters,
-        cv.submitter_names,
-        cv.last_evaluated,
-        cv.phenotype_list
+        cc.report_url AS clingen_report_url
     FROM clingen_curations cc
     JOIN genes g ON cc.gene_symbol = g.gene_symbol
     JOIN diseases d ON cc.disease_id = d.disease_id
-    JOIN clinvar_variants cv ON g.gene_symbol = cv.gene_symbol
-    WHERE cv.is_plp = 1
-      AND cc.classification IN ('Disputed', 'Refuted', 'Limited')
+    WHERE cc.classification IN ('Disputed', 'Refuted', 'Limited')
     ORDER BY 
         CASE cc.classification 
             WHEN 'Refuted' THEN 1 
@@ -85,110 +80,74 @@ def run_audit(
             WHEN 'Limited' THEN 3 
             ELSE 4 
         END,
-        cv.stars DESC,
         g.gene_symbol ASC;
     """
-    clinvar_rows = query_df(clinvar_audit_sql, db_path=db_path)
+    downgraded_curations = query_df(curations_sql, db_path=db_path)
 
-    findings_to_insert: List[Tuple[Any, ...]] = []
-    today = datetime.now().date()
-
-    for _, row in clinvar_rows.iterrows():
-        classification = str(row["clingen_classification"]).strip()
-        clingen_date_str = str(row["clingen_date"]) if pd.notna(row["clingen_date"]) else ""
-
-        days_unresolved = 0
-        if clingen_date_str:
-            try:
-                c_date = datetime.strptime(clingen_date_str.split()[0], "%Y-%m-%d").date()
-                days_unresolved = max(0, (today - c_date).days)
-            except ValueError:
-                pass
-
-        stars = int(row["stars"]) if pd.notna(row["stars"]) else 0
-        star_str = f"{stars} star{'s' if stars != 1 else ''}"
-        target_status = f"{row['clinical_significance']} ({star_str})"
-
-        submitter_info = (
-            f"{row['submitter_names']} ({row['num_submitters']} submitter{'s' if row['num_submitters'] != 1 else ''})"
-            if pd.notna(row["submitter_names"])
-            else f"{row['num_submitters']} submitter(s)"
-        )
-
-        if classification in ("Disputed", "Refuted"):
-            audit_class = C.AUDIT_CLASS_A
-            severity = "CRITICAL"
-            evidence_summary = (
-                f"ClinGen GCEP ({row['clingen_gcep'] or 'Consortium'}) classified the gene-disease "
-                f"relationship as '{classification}' on {clingen_date_str}. ClinVar continues to report "
-                f"this variant as {row['clinical_significance']} with {star_str} confidence."
-            )
-        else:  # Limited
-            audit_class = C.AUDIT_CLASS_B
-            severity = "HIGH"
-            evidence_summary = (
-                f"ClinGen GCEP ({row['clingen_gcep'] or 'Consortium'}) appraised gene evidence as 'Limited'. "
-                f"Variants should not exceed VUS classification according to ACMG/ClinGen recommendations, "
-                f"yet ClinVar asserts {row['clinical_significance']}."
-            )
-
-        findings_to_insert.append((
-            audit_class,
-            severity,
-            row["gene_symbol"],
-            row["disease_id"],
-            row["disease_name"],
-            classification,
-            clingen_date_str,
-            row["clingen_gcep"],
-            row["clingen_report_url"],
-            "ClinVar Variant",
-            str(row["variation_id"]),
-            str(row["variant_name"]),
-            target_status,
-            evidence_summary,
-            submitter_info,
-            str(row["last_evaluated"]) if pd.notna(row["last_evaluated"]) else "",
-            days_unresolved,
-        ))
-
-    # -------------------------------------------------------------------------
-    # 2. SQL Query for Class C (PanelApp Green entries in Disputed/Refuted genes)
-    # -------------------------------------------------------------------------
-    panelapp_audit_sql = """
+    # 2. Retrieve ClinVar P/LP variants for target genes
+    clinvar_sql = """
     SELECT 
-        cc.classification AS clingen_classification,
-        cc.classification_date AS clingen_date,
-        cc.gcep AS clingen_gcep,
-        cc.report_url AS clingen_report_url,
-        g.gene_symbol,
-        d.disease_id,
-        d.disease_name,
+        cv.variation_id,
+        cv.gene_symbol,
+        cv.disease_id,
+        cv.variant_name,
+        cv.clinical_significance,
+        cv.stars,
+        cv.review_status,
+        cv.num_submitters,
+        cv.submitter_names,
+        cv.last_evaluated,
+        cv.phenotype_list,
+        COALESCE(cv.gnomad_af_global, 0.0) AS gnomad_af,
+        COALESCE(cv.mcaf_threshold, 0.0001) AS mcaf_threshold,
+        COALESCE(cv.population_refuted_flag, 0) AS population_refuted_flag
+    FROM clinvar_variants cv
+    WHERE cv.is_plp = 1;
+    """
+    clinvar_df = query_df(clinvar_sql, db_path=db_path)
+
+    # 3. Retrieve PanelApp green panels
+    panelapp_sql = """
+    SELECT 
+        pa.entry_id,
+        pa.gene_symbol,
+        pa.disease_id,
         pa.panel_id,
         pa.panel_name,
         pa.panel_version,
         pa.confidence,
         pa.mode_of_inheritance,
         pa.phenotypes
-    FROM clingen_curations cc
-    JOIN genes g ON cc.gene_symbol = g.gene_symbol
-    JOIN diseases d ON cc.disease_id = d.disease_id
-    JOIN panelapp_entries pa ON g.gene_symbol = pa.gene_symbol
-    WHERE LOWER(pa.confidence) = 'green'
-      AND cc.classification IN ('Disputed', 'Refuted')
-    ORDER BY 
-        CASE cc.classification 
-            WHEN 'Refuted' THEN 1 
-            WHEN 'Disputed' THEN 2 
-            ELSE 3 
-        END,
-        pa.panel_name ASC;
+    FROM panelapp_entries pa
+    WHERE LOWER(pa.confidence) = 'green';
     """
-    panelapp_rows = query_df(panelapp_audit_sql, db_path=db_path)
+    panelapp_df = query_df(panelapp_sql, db_path=db_path)
 
-    for _, row in panelapp_rows.iterrows():
-        classification = str(row["clingen_classification"]).strip()
-        clingen_date_str = str(row["clingen_date"]) if pd.notna(row["clingen_date"]) else ""
+    findings_to_insert: List[Tuple[Any, ...]] = []
+    seen_findings: Set[Tuple[str, int, str, str]] = set()
+    today = datetime.now().date()
+
+    # Pre-index variants and panels by gene_symbol
+    variants_by_gene: Dict[str, List[Dict[str, Any]]] = {}
+    if not clinvar_df.empty:
+        for _, v in clinvar_df.iterrows():
+            sym = str(v["gene_symbol"]).strip().upper()
+            variants_by_gene.setdefault(sym, []).append(v.to_dict())
+
+    panels_by_gene: Dict[str, List[Dict[str, Any]]] = {}
+    if not panelapp_df.empty:
+        for _, p in panelapp_df.iterrows():
+            sym = str(p["gene_symbol"]).strip().upper()
+            panels_by_gene.setdefault(sym, []).append(p.to_dict())
+
+    # Evaluate each curation
+    for _, crow in downgraded_curations.iterrows():
+        sym = str(crow["gene_symbol"]).strip().upper()
+        cur_id = int(crow["curation_id"])
+        cg_did = str(crow["disease_id"]).strip()
+        cg_dname = str(crow["disease_name"]).strip()
+        classification = str(crow["clingen_classification"]).strip()
+        clingen_date_str = str(crow["clingen_date"]) if pd.notna(crow["clingen_date"]) else ""
 
         days_unresolved = 0
         if clingen_date_str:
@@ -198,51 +157,182 @@ def run_audit(
             except ValueError:
                 pass
 
-        target_status = f"Green (Diagnostic-Grade, v{row['panel_version'] or '1.0'})"
-        panel_info = f"PanelApp ID {row['panel_id']} ({row['mode_of_inheritance'] or 'Unknown MOI'})"
+        # Evaluate ClinVar Variants for this curation
+        for v in variants_by_gene.get(sym, []):
+            match_res = match_variant_to_curation_disease(
+                gene_symbol=sym,
+                variant_disease_id=v.get("disease_id"),
+                variant_phenotypes=v.get("phenotype_list"),
+                clingen_disease_id=cg_did,
+                clingen_disease_name=cg_dname,
+            )
 
-        evidence_summary = (
-            f"Genomics England PanelApp lists this gene as diagnostic-grade 'Green' for diagnostic reporting, "
-            f"directly conflicting with ClinGen's '{classification}' validity determination made on {clingen_date_str}."
-        )
+            # Skip if variant condition does not match downgraded disease
+            if not match_res.is_match:
+                continue
 
-        findings_to_insert.append((
-            C.AUDIT_CLASS_C,
-            "CRITICAL",
-            row["gene_symbol"],
-            row["disease_id"],
-            row["disease_name"],
-            classification,
-            clingen_date_str,
-            row["clingen_gcep"],
-            row["clingen_report_url"],
-            "PanelApp Panel",
-            str(row["panel_id"]),
-            str(row["panel_name"]),
-            target_status,
-            evidence_summary,
-            panel_info,
-            "",  # no variant evaluation date for panels
-            days_unresolved,
-        ))
+            var_id_str = str(v["variation_id"])
+            finding_key = (sym, cur_id, "ClinVar Variant", var_id_str)
+            if finding_key in seen_findings:
+                continue
+            seen_findings.add(finding_key)
 
-    # -------------------------------------------------------------------------
-    # 3. Insert findings into audit_findings table
-    # -------------------------------------------------------------------------
+            stars = int(v["stars"]) if pd.notna(v.get("stars")) else 0
+            star_str = f"{stars} star{'s' if stars != 1 else ''}"
+            target_status = f"{v['clinical_significance']} ({star_str})"
+
+            sub_names = v.get("submitter_names")
+            n_sub = v.get("num_submitters", 1)
+            submitter_info = (
+                f"{sub_names} ({n_sub} submitter{'s' if n_sub != 1 else ''})"
+                if pd.notna(sub_names) and sub_names
+                else f"{n_sub} submitter(s)"
+            )
+
+            if classification in ("Disputed", "Refuted"):
+                audit_class = C.AUDIT_CLASS_A
+                severity = "CRITICAL" if match_res.match_status == "CONFIRMED_MATCH" else "HIGH"
+                evidence_summary = (
+                    f"ClinGen GCEP ({crow['clingen_gcep'] or 'Consortium'}) classified gene-disease causality as "
+                    f"'{classification}' on {clingen_date_str}. Downstream ClinVar asserts this variant as "
+                    f"{v['clinical_significance']} ({star_str}). Match: {match_res.rationale}"
+                )
+            else:  # Limited
+                audit_class = C.AUDIT_CLASS_B
+                severity = "HIGH" if match_res.match_status == "CONFIRMED_MATCH" else "MEDIUM"
+                evidence_summary = (
+                    f"ClinGen GCEP ({crow['clingen_gcep'] or 'Consortium'}) appraised evidence as 'Limited'. "
+                    f"Variants in limited-evidence genes should not exceed VUS, yet ClinVar asserts "
+                    f"{v['clinical_significance']}. Match: {match_res.rationale}"
+                )
+
+            findings_to_insert.append((
+                audit_class,
+                severity,
+                sym,
+                cg_did,
+                cg_dname,
+                classification,
+                clingen_date_str,
+                crow["clingen_gcep"],
+                crow["clingen_report_url"],
+                "ClinVar Variant",
+                var_id_str,
+                str(v["variant_name"]),
+                target_status,
+                evidence_summary,
+                submitter_info,
+                str(v["last_evaluated"]) if pd.notna(v.get("last_evaluated")) else "",
+                days_unresolved,
+                float(v.get("gnomad_af", 0.0)),
+                float(v.get("mcaf_threshold", 0.0001)),
+                int(v.get("population_refuted_flag", 0)),
+                cur_id,
+                match_res.match_status,
+                match_res.rationale,
+                match_res.rule_id,
+                match_res.target_phenotype,
+                match_res.confidence,
+            ))
+
+        # Evaluate PanelApp entries for this curation (Class C applies to Disputed/Refuted)
+        if classification in ("Disputed", "Refuted"):
+            for p in panels_by_gene.get(sym, []):
+                match_res = match_panel_to_curation_disease(
+                    gene_symbol=sym,
+                    panel_id=int(p["panel_id"]),
+                    panel_name=str(p["panel_name"]),
+                    panel_phenotypes=p.get("phenotypes"),
+                    clingen_disease_id=cg_did,
+                    clingen_disease_name=cg_dname,
+                )
+
+                if not match_res.is_match:
+                    continue
+
+                panel_id_str = str(p["panel_id"])
+                finding_key = (sym, cur_id, "PanelApp Panel", panel_id_str)
+                if finding_key in seen_findings:
+                    continue
+                seen_findings.add(finding_key)
+
+                target_status = f"Green (Diagnostic-Grade, v{p.get('panel_version') or '1.0'})"
+                panel_info = f"PanelApp ID {p['panel_id']} ({p.get('mode_of_inheritance') or 'Unknown MOI'})"
+                evidence_summary = (
+                    f"Genomics England PanelApp lists this gene as diagnostic-grade 'Green' in '{p['panel_name']}', "
+                    f"conflicting with ClinGen's '{classification}' determination for '{cg_dname}' on {clingen_date_str}. "
+                    f"Match: {match_res.rationale}"
+                )
+
+                findings_to_insert.append((
+                    C.AUDIT_CLASS_C,
+                    "CRITICAL" if match_res.match_status == "CONFIRMED_MATCH" else "HIGH",
+                    sym,
+                    cg_did,
+                    cg_dname,
+                    classification,
+                    clingen_date_str,
+                    crow["clingen_gcep"],
+                    crow["clingen_report_url"],
+                    "PanelApp Panel",
+                    panel_id_str,
+                    str(p["panel_name"]),
+                    target_status,
+                    evidence_summary,
+                    panel_info,
+                    "",
+                    days_unresolved,
+                    0.0,
+                    0.0001,
+                    0,
+                    cur_id,
+                    match_res.match_status,
+                    match_res.rationale,
+                    match_res.rule_id,
+                    match_res.target_phenotype,
+                    match_res.confidence,
+                ))
+
+    # 4. Insert findings into audit_findings table
     insert_sql = """
     INSERT INTO audit_findings (
         audit_class, severity, gene_symbol, disease_id, disease_name,
         clingen_classification, clingen_date, clingen_gcep, clingen_report_url,
         target_type, target_id, target_name, target_status, evidence_summary,
-        submitters_or_panel_info, last_evaluated_date, days_unresolved
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        submitters_or_panel_info, last_evaluated_date, days_unresolved,
+        gnomad_af, mcaf_threshold, population_refuted_flag,
+        curation_id, match_status, match_rationale, rule_id,
+        target_phenotype, disease_match_confidence
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """
     if findings_to_insert:
         execute_many(insert_sql, findings_to_insert, db_path=db_path)
 
-    # -------------------------------------------------------------------------
-    # 4. Compute Summary Metrics
-    # -------------------------------------------------------------------------
+    # 5. Log execution in provenance table
+    class_a_n = sum(1 for f in findings_to_insert if f[0] == C.AUDIT_CLASS_A)
+    class_b_n = sum(1 for f in findings_to_insert if f[0] == C.AUDIT_CLASS_B)
+    class_c_n = sum(1 for f in findings_to_insert if f[0] == C.AUDIT_CLASS_C)
+    prov_sql = """
+    INSERT INTO provenance (source_name, source_url, snapshot_date, record_count, transformation_version, details)
+    VALUES (?, ?, ?, ?, ?, ?);
+    """
+    try:
+        execute_write(
+            prov_sql,
+            (
+                "CuraCascade Disease-Aware Audit Engine",
+                "internal",
+                datetime.now().strftime("%Y-%m-%d"),
+                len(findings_to_insert),
+                "2.0.0-disease-aware",
+                f"Materialized {len(findings_to_insert)} findings ({class_a_n} Class A, {class_b_n} Class B, {class_c_n} Class C).",
+            ),
+            db_path=db_path,
+        )
+    except Exception:
+        pass
+
+    # 6. Compute Summary Metrics
     metrics = get_audit_metrics(db_path=db_path)
     findings_df = get_all_findings(db_path=db_path)
 
@@ -442,6 +532,7 @@ def get_all_findings(
         audit_class,
         severity,
         gene_symbol,
+        disease_id,
         disease_name,
         clingen_classification,
         clingen_date,
@@ -457,7 +548,13 @@ def get_all_findings(
         clingen_report_url,
         gnomad_af,
         mcaf_threshold,
-        population_refuted_flag
+        population_refuted_flag,
+        curation_id,
+        match_status,
+        match_rationale,
+        rule_id,
+        target_phenotype,
+        disease_match_confidence
     FROM audit_findings
     {where_clause}
     {order_clause}

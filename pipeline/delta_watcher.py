@@ -7,12 +7,15 @@ from database.connection import get_connection
 def setup_provenance_table(conn: sqlite3.Connection):
     conn.execute("""
         CREATE TABLE IF NOT EXISTS provenance (
-            sync_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            source_name TEXT NOT NULL,
-            ingestion_timestamp TEXT NOT NULL,
-            records_updated INTEGER NOT NULL,
-            etag TEXT,
-            last_modified TEXT
+            provenance_id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            source_name            TEXT NOT NULL,
+            source_url             TEXT,
+            snapshot_date          TEXT,
+            retrieval_timestamp    TEXT DEFAULT (datetime('now')),
+            sha256_checksum        TEXT,
+            record_count           INTEGER,
+            transformation_version TEXT,
+            details                TEXT
         )
     """)
     conn.commit()
@@ -23,7 +26,7 @@ def check_upstream_deltas(db_path: str = "data/curacascade.db") -> dict:
         setup_provenance_table(conn)
         
         # Check latest sync in our db
-        cur = conn.execute("SELECT etag, last_modified FROM provenance WHERE source_name='ClinGen_Live_Sync' ORDER BY sync_id DESC LIMIT 1")
+        cur = conn.execute("SELECT details FROM provenance WHERE source_name='ClinGen_Live_Sync' ORDER BY provenance_id DESC LIMIT 1")
         row = cur.fetchone()
         local_etag = row[0] if row else None
         
@@ -66,8 +69,19 @@ def apply_deltas(db_path: str = "data/curacascade.db"):
     with get_connection(db_path, readonly=False) as conn:
         setup_provenance_table(conn)
         conn.execute(
-            "INSERT INTO provenance (source_name, ingestion_timestamp, records_updated, etag, last_modified) VALUES (?, ?, ?, ?, ?)",
-            ("ClinGen_Live_Sync", now, records_updated, delta_info["upstream_etag"], delta_info["upstream_last_modified"])
+            """
+            INSERT INTO provenance (
+                source_name, source_url, snapshot_date, retrieval_timestamp, record_count, transformation_version, details
+            ) VALUES (?, ?, ?, ?, ?, '2.0', ?)
+            """,
+            (
+                "ClinGen_Live_Sync",
+                "https://search.clinicalgenome.org/kb/gene-validity/json",
+                now[:10],
+                now,
+                records_updated,
+                f"ETag: {delta_info['upstream_etag']}, Last-Modified: {delta_info['upstream_last_modified']}"
+            )
         )
         conn.commit()
         

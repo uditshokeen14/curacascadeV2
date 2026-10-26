@@ -14,7 +14,7 @@ from typing import Any, Generator, Iterable, Optional, Union
 import pandas as pd
 
 import config as C
-from database.schema import init_db
+from database.schema import init_db, migrate_schema
 
 
 def get_db_path(custom_path: Optional[Union[str, Path]] = None) -> Path:
@@ -97,6 +97,7 @@ def get_connection(
             conn.execute("PRAGMA query_only = ON;")
         else:
             ensure_genes_schema(conn)
+            migrate_schema(conn)
         yield conn
     finally:
         conn.close()
@@ -165,7 +166,7 @@ def execute_many(
     Returns:
         Total number of executed parameter sets.
     """
-    with get_connection(db_path) as conn:
+    with get_connection(db_path, readonly=False) as conn:
         cursor = conn.cursor()
         cursor.executemany(sql, seq_of_params)
         conn.commit()
@@ -182,5 +183,5 @@ def ensure_database_ready(
         db_path: Target database path.
         drop_existing: Whether to wipe and recreate tables.
     """
-    with get_connection(db_path) as conn:
+    with get_connection(db_path, readonly=False) as conn:
         init_db(conn, drop_existing=drop_existing)

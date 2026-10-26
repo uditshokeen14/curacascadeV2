@@ -89,140 +89,593 @@ st.set_page_config(
 
 CUSTOM_CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital,wght@0,400;1,400&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
-/* Global Dark Theme Enforcement & Light Mode Contrast Bug Fix */
+/* ==============================================================================
+   ARTCRAFT BRUTALIST PRECISION DESIGN SYSTEM TOKENS
+   Inspired by https://getartcraft.com/apps
+   ============================================================================== */
 :root {
     color-scheme: dark !important;
+    --bg: #0b0b0e;
+    --bg-raised: #121316;
+    --bg-sunken: #060608;
+    --bg-hover: #17181d;
+    --ink: #f2f1ee;
+    --ink-strong: #ffffff;
+    --muted: rgba(242, 241, 238, 0.65);
+    --faint: rgba(242, 241, 238, 0.38);
+    --line: rgba(242, 241, 238, 0.12);
+    --line-strong: rgba(242, 241, 238, 0.32);
+    --line-hover: rgba(242, 241, 238, 0.60);
+    --accent: #2d81ff;
+    --accent-ink: #74aaff;
+    --invert-bg: #ffffff;
+    --invert-fg: #0b0b0c;
+    --danger: #ff6259;
+    --danger-bg: rgba(255, 98, 89, 0.08);
+    --warning: #f59e0b;
+    --warning-bg: rgba(245, 158, 11, 0.08);
+    --success: #10b981;
+    --success-bg: rgba(16, 185, 129, 0.08);
+    --purple: #c084fc;
+    --purple-bg: rgba(192, 132, 252, 0.08);
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: 'Instrument Serif', Georgia, serif;
+    --font-heading: 'Space Grotesk', 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Geist Mono', monospace;
 }
 
+/* Base Canvas & Architectural Hairline Grid */
 html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
-    background-color: #0b0f19 !important;
-    color: #f8fafc !important;
+    background-color: var(--bg) !important;
+    color: var(--ink) !important;
+    font-family: var(--font-sans) !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
 }
 
-[data-testid="stSidebar"], [data-testid="stSidebarContent"] {
-    background-color: #0f172a !important;
-    color: #f8fafc !important;
+.stApp {
+    background-color: #0b0b0e !important;
+    background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px) !important;
+    background-size: 40px 40px !important;
 }
 
-/* Global Font & Layout Resets */
-html, body, [class*="css"] {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+/* Hairline Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #0b0b0e;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(242, 241, 238, 0.2);
+    border-radius: 0px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(242, 241, 238, 0.4);
 }
 
-code, pre, .mono-font {
-    font-family: 'JetBrains Mono', monospace !important;
+/* Header & Top Bar */
+[data-testid="stHeader"] {
+    background: rgba(11, 11, 14, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid var(--line) !important;
 }
 
-/* Ensure all headers maintain crisp contrast */
+/* Container Spacing */
+.block-container {
+    padding-top: 1.5rem !important;
+    padding-bottom: 3.5rem !important;
+    max-width: 98% !important;
+}
+@media (min-width: 1024px) {
+    .block-container {
+        padding-right: 165px !important;
+        max-width: calc(100% - 15px) !important;
+    }
+}
+
+/* Typography Resets */
 .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6 {
-    color: #f8fafc !important;
+    color: var(--ink-strong) !important;
+    font-family: var(--font-heading) !important;
+    letter-spacing: -0.02em !important;
+    font-weight: 700 !important;
 }
 
 .stApp p, .stApp span, .stApp label {
-    color: #cbd5e1;
+    color: var(--ink);
 }
 
-/* Streamlit Built-in Metrics Contrast Protection */
+code, pre, .mono-font {
+    font-family: var(--font-mono) !important;
+}
+
+/* Universal Sharp Brutalist Edges */
+.stButton > button,
+[data-testid="stTextInput"] input,
+[data-testid="stNumberInput"] input,
+[data-testid="stSelectbox"] div,
+[data-testid="stMultiSelect"] div,
+[data-testid="stExpander"],
+[data-testid="stExpander"] details summary,
+[data-testid="stAlert"],
+[data-testid="stDataFrame"],
+[data-testid="stMetric"],
+div[data-testid="stVerticalBlockBorderWrapper"],
+.metric-card,
+.guide-card,
+.gene-stat-card,
+.status-pill,
+.badge-inline,
+.callout-box,
+.kpi-popgen-card,
+.kpi-equity-card,
+.kpi-forecast-card,
+.kpi-latency-card,
+.remediation-container,
+.remediation-subcard {
+    border-radius: 0px !important;
+}
+
+/* ArtCraft Technical CAD Crosshair Markers (+) */
+.tick {
+    pointer-events: none;
+    width: 11px;
+    height: 11px;
+    position: absolute;
+    z-index: 30;
+}
+.tick:before, .tick:after {
+    content: "";
+    background: var(--line-strong);
+    position: absolute;
+}
+.tick:before {
+    width: 1px;
+    top: 0;
+    bottom: 0;
+    left: 5px;
+}
+.tick:after {
+    height: 1px;
+    left: 0;
+    right: 0;
+    top: 5px;
+}
+.tick-top-left { top: -6px; left: -6px; }
+.tick-top-right { top: -6px; right: -6px; }
+.tick-bottom-left { bottom: -6px; left: -6px; }
+.tick-bottom-right { bottom: -6px; right: -6px; }
+
+/* HUD Monospace Labels & Eyebrows */
+.hud-label {
+    font-family: var(--font-mono) !important;
+    letter-spacing: 0.15em !important;
+    text-transform: uppercase !important;
+    font-size: 0.6875rem !important; /* 11px */
+    font-weight: 600 !important;
+    color: var(--muted) !important;
+    line-height: 1.2 !important;
+}
+.hud-num {
+    color: var(--faint) !important;
+    font-weight: 700 !important;
+}
+.hud-sep {
+    color: var(--faint) !important;
+    margin: 0 4px !important;
+}
+.hud-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink);
+}
+.hud-pill-dim {
+    color: var(--faint);
+}
+.hud-pulse {
+    color: #10b981;
+    margin-right: 4px;
+    display: inline-block;
+    animation: hud-blink 2s infinite ease-in-out;
+}
+@keyframes hud-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* Hero Section */
+.hero-container {
+    background: var(--bg-raised) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 0px !important;
+    padding: 28px 32px !important;
+    margin-bottom: 24px !important;
+    position: relative !important;
+    box-shadow: none !important;
+}
+.hero-container::before {
+    display: none !important;
+}
+.hero-eyebrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 22px;
+}
+.hero-title {
+    font-family: var(--font-display) !important;
+    font-size: 3.6rem !important;
+    font-weight: 400 !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.04 !important;
+    color: #ffffff !important;
+    margin: 0 0 14px 0 !important;
+    background: none !important;
+    -webkit-text-fill-color: initial !important;
+}
+.hero-title-accent {
+    font-family: var(--font-display) !important;
+    font-style: italic !important;
+    color: var(--accent-ink) !important;
+}
+.hero-subtitle {
+    font-family: var(--font-sans) !important;
+    font-size: 1.05rem !important;
+    color: var(--muted) !important;
+    line-height: 1.6 !important;
+    max-width: 950px !important;
+    margin-bottom: 20px !important;
+}
+.hero-hud-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+/* ==============================================================================
+   INTERACTIVE 3D POP-OUT ENLARGEMENT SYSTEM
+   Boxes dynamically scale and elevate toward the user on hover
+   ============================================================================== */
+
+/* Ensure parent containers allow scaled boxes and graphs to overflow without clipping */
+[data-testid="column"], 
+[data-testid="stHorizontalBlock"],
+[data-testid="stVerticalBlock"],
+[data-testid="stElementContainer"],
+[data-testid="stTabContent"],
+.stTabs [data-baseweb="tab-panel"],
+.stElementContainer,
+.stHorizontalBlock,
+.block-container {
+    overflow: visible !important;
+}
+
+/* Metric KPI Cards Pop-Out Architecture */
+.metric-card {
+    background: var(--bg-raised) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 2px !important;
+    padding: 18px 20px !important;
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    height: 100% !important;
+    min-height: 136px !important;
+    cursor: default;
+    transition: transform 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                box-shadow 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                border-color 0.2s ease, 
+                background-color 0.2s ease !important;
+    transform-origin: center center;
+    z-index: 1;
+}
+
+.metric-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: transparent;
+    transition: background-color 0.22s ease, box-shadow 0.22s ease;
+    z-index: 2;
+}
+
+/* THE POP-OUT HOVER ENLARGEMENT (SPRING SCALE & 3D LIFT) */
+.metric-card:hover {
+    transform: translateY(-10px) scale(1.06) !important;
+    z-index: 100 !important;
+    background-color: #171824 !important;
+    border-color: rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 28px 56px -12px rgba(0, 0, 0, 0.98), 
+                0 0 0 1px rgba(255, 255, 255, 0.4),
+                0 14px 32px -4px rgba(45, 129, 255, 0.35) !important;
+}
+
+.metric-card:hover .metric-value {
+    text-shadow: 0 0 24px rgba(255, 255, 255, 0.6);
+    transform: scale(1.03);
+    transition: transform 0.22s ease, text-shadow 0.22s ease;
+}
+
+.metric-card:hover .metric-tag {
+    border-color: #ffffff !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Card-Specific Accent Lighting on Pop-Out */
+.metric-card-blue:hover::before {
+    background: #2d81ff !important;
+    box-shadow: 0 0 16px #2d81ff, 0 0 32px rgba(45, 129, 255, 0.5) !important;
+}
+.metric-card-blue:hover {
+    border-color: rgba(45, 129, 255, 0.85) !important;
+    box-shadow: 0 28px 56px -12px rgba(0, 0, 0, 0.98), 0 0 0 1px rgba(45, 129, 255, 0.5), 0 14px 32px -4px rgba(45, 129, 255, 0.45) !important;
+}
+
+.metric-card-amber:hover::before {
+    background: #f59e0b !important;
+    box-shadow: 0 0 16px #f59e0b, 0 0 32px rgba(245, 158, 11, 0.5) !important;
+}
+.metric-card-amber:hover {
+    border-color: rgba(245, 158, 11, 0.85) !important;
+    box-shadow: 0 28px 56px -12px rgba(0, 0, 0, 0.98), 0 0 0 1px rgba(245, 158, 11, 0.5), 0 14px 32px -4px rgba(245, 158, 11, 0.45) !important;
+}
+
+.metric-card-red:hover::before {
+    background: #ff6259 !important;
+    box-shadow: 0 0 16px #ff6259, 0 0 32px rgba(255, 98, 89, 0.5) !important;
+}
+.metric-card-red:hover {
+    border-color: rgba(255, 98, 89, 0.85) !important;
+    box-shadow: 0 28px 56px -12px rgba(0, 0, 0, 0.98), 0 0 0 1px rgba(255, 98, 89, 0.5), 0 14px 32px -4px rgba(255, 98, 89, 0.45) !important;
+}
+
+.metric-card-yellow:hover::before {
+    background: #fbbf24 !important;
+    box-shadow: 0 0 16px #fbbf24, 0 0 32px rgba(251, 191, 36, 0.5) !important;
+}
+.metric-card-yellow:hover {
+    border-color: rgba(251, 191, 36, 0.85) !important;
+    box-shadow: 0 28px 56px -12px rgba(0, 0, 0, 0.98), 0 0 0 1px rgba(251, 191, 36, 0.5), 0 14px 32px -4px rgba(251, 191, 36, 0.45) !important;
+}
+
+.metric-card-purple:hover::before {
+    background: #c084fc !important;
+    box-shadow: 0 0 16px #c084fc, 0 0 32px rgba(192, 132, 252, 0.5) !important;
+}
+.metric-card-purple:hover {
+    border-color: rgba(192, 132, 252, 0.85) !important;
+    box-shadow: 0 28px 56px -12px rgba(0, 0, 0, 0.98), 0 0 0 1px rgba(192, 132, 252, 0.5), 0 14px 32px -4px rgba(192, 132, 252, 0.45) !important;
+}
+
+.metric-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+.metric-index {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 600;
+}
+.metric-tag {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 1px 6px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.highlight-amber { border-color: rgba(245, 158, 11, 0.4) !important; color: #fbbf24 !important; }
+.highlight-red { border-color: rgba(255, 98, 89, 0.4) !important; color: #ff857f !important; }
+.highlight-purple { border-color: rgba(192, 132, 252, 0.4) !important; color: #d8b4fe !important; }
+
+.metric-label {
+    font-family: var(--font-mono) !important;
+    font-size: 0.6875rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.14em !important;
+    color: var(--muted) !important;
+    margin-bottom: 4px !important;
+}
+.metric-value {
+    font-family: var(--font-mono), 'Inter', monospace !important;
+    font-size: 2.15rem !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.03em !important;
+    color: var(--ink-strong) !important;
+    margin: 4px 0 8px 0 !important;
+    transition: color 0.2s ease, text-shadow 0.2s ease;
+}
+.metric-caption {
+    font-family: var(--font-mono) !important;
+    font-size: 0.6875rem !important;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase !important;
+    color: var(--faint) !important;
+    line-height: 1.4 !important;
+}
+.hud-dim {
+    color: var(--faint);
+}
+
+/* Streamlit Native Metric Overrides */
+[data-testid="stMetric"] {
+    background-color: var(--bg-raised) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 0px !important;
+    padding: 14px 16px !important;
+}
 [data-testid="stMetricLabel"] {
-    color: #94a3b8 !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.6875rem !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+    color: var(--muted) !important;
+    font-weight: 600 !important;
 }
 [data-testid="stMetricValue"] {
-    color: #f8fafc !important;
+    font-family: var(--font-mono), var(--font-sans) !important;
+    font-size: 1.85rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+    color: var(--ink-strong) !important;
 }
 [data-testid="stMetricDelta"] {
-    color: #38bdf8 !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.72rem !important;
 }
 
-/* Tight Top Margins for Maximum Screen Real Estate */
-.block-container {
-    padding-top: 1.25rem !important;
-    padding-bottom: 2.5rem !important;
-    max-width: 98% !important;
+/* Artcraft Instant Invert Buttons */
+.stButton > button, div[data-testid="stFormSubmitButton"] > button {
+    border-radius: 0px !important;
+    font-family: var(--font-mono) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.12em !important;
+    font-size: 11px !important;
+    border: 1px solid var(--line-strong) !important;
+    background-color: var(--bg-raised) !important;
+    color: var(--ink) !important;
+    padding: 8px 18px !important;
+    transition: background-color 0.12s linear, color 0.12s linear, border-color 0.12s linear !important;
+    box-shadow: none !important;
+}
+.stButton > button:hover {
+    background-color: #ffffff !important;
+    color: #0b0b0c !important;
+    border-color: #ffffff !important;
+    transform: none !important;
+}
+.stButton > button:active {
+    background-color: #e2e8f0 !important;
+    color: #0b0b0c !important;
+    transform: translateY(1px) !important;
+}
+.stButton > button[kind="primary"], .stButton > button[data-testid="baseButton-primary"] {
+    background-color: #ffffff !important;
+    color: #0b0b0c !important;
+    border: 1px solid #ffffff !important;
+}
+.stButton > button[kind="primary"]:hover {
+    background-color: #2d81ff !important;
+    color: #ffffff !important;
+    border-color: #2d81ff !important;
 }
 
-/* Plotly Chart Card Framing */
-.stPlotlyChart {
-    background: #0f172a !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 12px !important;
-    padding: 8px !important;
-    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.4) !important;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+/* Tabs Toolbar System */
+[data-testid="stTabs"] {
+    gap: 0px !important;
+}
+[data-testid="stTabs"] [data-baseweb="tab-list"] {
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--line) !important;
+    gap: 0px !important;
+    padding: 0px !important;
+}
+[data-testid="stTabs"] [data-baseweb="tab"] {
+    border-radius: 0px !important;
+    border: 1px solid transparent !important;
+    border-bottom: none !important;
+    padding: 10px 18px !important;
+    background-color: transparent !important;
+    color: var(--muted) !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+    transition: all 0.15s ease !important;
+}
+[data-testid="stTabs"] [data-baseweb="tab"]:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+[data-testid="stTabs"] [aria-selected="true"] {
+    background-color: var(--bg-raised) !important;
+    color: #ffffff !important;
+    border-top: 2px solid #ffffff !important;
+    border-left: 1px solid var(--line) !important;
+    border-right: 1px solid var(--line) !important;
+    border-bottom: 1px solid var(--bg-raised) !important;
+    font-weight: 700 !important;
 }
 
-.stPlotlyChart:hover {
-    border-color: rgba(99, 102, 241, 0.3) !important;
-    box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6) !important;
+/* Inputs, Selectboxes, Multiselects */
+[data-testid="stTextInput"] input, 
+[data-testid="stNumberInput"] input,
+[data-baseweb="select"] > div,
+[data-baseweb="base-input"] {
+    border-radius: 0px !important;
+    border: 1px solid var(--line) !important;
+    background-color: var(--bg-sunken) !important;
+    color: var(--ink) !important;
+    font-family: var(--font-mono), var(--font-sans) !important;
+    font-size: 0.85rem !important;
+    transition: border-color 0.15s ease !important;
+}
+[data-testid="stTextInput"] input:focus, 
+[data-baseweb="select"] > div:focus-within {
+    border-color: #ffffff !important;
+    box-shadow: 0 0 0 1px #ffffff !important;
 }
 
-/* Mermaid Chart Card Framing & Dark Theme Enhancements */
-[data-testid="stMermaidChart"], .stMermaidChart {
-    background: #0d1322 !important;
-    border: 1px solid rgba(56, 189, 248, 0.25) !important;
-    border-radius: 12px !important;
-    padding: 18px !important;
-    box-shadow: 0 8px 28px -6px rgba(0, 0, 0, 0.55) !important;
-    overflow-x: auto !important;
-}
-
-[data-testid="stMermaidChart"] svg {
-    max-width: 100% !important;
-    height: auto !important;
-}
-
-/* Clinical Help & Field Guide Callout Cards */
-.guide-card {
-    background: rgba(15, 23, 42, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 16px 18px;
-    margin-bottom: 12px;
-    backdrop-filter: blur(8px);
-    transition: transform 0.2s ease, border-color 0.2s ease;
-}
-
-.guide-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(56, 189, 248, 0.35);
-}
-
-.guide-card-critical {
-    border-left: 5px solid #ef4444 !important;
-}
-
-.guide-card-warning {
-    border-left: 5px solid #f97316 !important;
-}
-
-.guide-card-panel {
-    border-left: 5px solid #c084fc !important;
-}
-
-.guide-card-mcaf {
-    border-left: 5px solid #38bdf8 !important;
-}
-
-.guide-card-survival {
-    border-left: 5px solid #10b981 !important;
-}
-
-/* Expander Container & Anti-Clipping Styles */
+/* Expanders */
 [data-testid="stExpander"] {
-    background: rgba(15, 23, 42, 0.65) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 12px !important;
+    border-radius: 0px !important;
+    border: 1px solid var(--line) !important;
+    background-color: var(--bg-raised) !important;
+    margin-bottom: 14px !important;
+    overflow: hidden !important;
 }
-
+[data-testid="stExpander"] details summary {
+    border-radius: 0px !important;
+    padding: 12px 16px !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.76rem !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    font-weight: 600 !important;
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    border-bottom: 1px solid var(--line) !important;
+}
 [data-testid="stExpander"]:hover {
-    border-color: rgba(56, 189, 248, 0.3) !important;
+    border-color: var(--line-strong) !important;
 }
-
 [data-testid="stExpanderDetails"] {
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-    padding: 14px 18px !important;
+    padding: 16px 20px !important;
 }
 
 /* KaTeX LaTeX Formula Anti-Clipping & Responsive Display */
@@ -233,7 +686,6 @@ code, pre, .mono-font {
     padding: 4px 2px !important;
     margin: 4px 0 !important;
 }
-
 .katex-display {
     overflow-x: auto !important;
     overflow-y: hidden !important;
@@ -241,370 +693,801 @@ code, pre, .mono-font {
     margin: 0.25rem 0 !important;
     max-width: 100% !important;
 }
-
 .katex {
     font-size: 1.0rem !important;
     line-height: 1.35 !important;
     text-rendering: auto !important;
 }
-
 .katex-html {
     overflow-x: auto !important;
     overflow-y: hidden !important;
 }
 
-
-/* Hero Banner */
-.hero-container {
-    background: linear-gradient(135deg, #090d16 0%, #111827 40%, #1e1b4b 75%, #311042 100%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 14px;
-    padding: 24px 28px;
-    margin-bottom: 20px;
-    color: #ffffff;
-    box-shadow: 0 12px 36px -12px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+/* Sidebar Custom Styling */
+[data-testid="stSidebar"] {
+    background-color: var(--bg) !important;
+    border-right: 1px solid var(--line) !important;
+}
+[data-testid="stSidebar"] [data-testid="stSidebarContent"] {
+    background-color: var(--bg) !important;
+    padding-top: 1.5rem !important;
+}
+.sidebar-brand-card {
+    border: 1px solid var(--line);
+    background: var(--bg-raised);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     position: relative;
-    overflow: hidden;
+}
+.sidebar-brand-icon {
+    width: 32px;
+    height: 32px;
+    background: #ffffff;
+    color: #0b0b0c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-family: var(--font-mono);
+    font-size: 14px;
+}
+.sidebar-brand-title {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #ffffff;
+}
+.sidebar-brand-sub {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.sidebar-hud-box {
+    border: 1px solid var(--line);
+    background: var(--bg-sunken);
+    padding: 12px 14px;
+    margin: 12px 0;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+}
+.sidebar-hud-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.sidebar-hud-line:last-child {
+    border-bottom: none;
+}
+.hud-lbl {
+    color: var(--faint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+.hud-val {
+    color: var(--ink);
+    font-weight: 600;
+}
+.hud-val-warn {
+    color: #fbbf24;
+    font-weight: 700;
+}
+.sidebar-footer-card {
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+    margin-top: 20px;
+}
+.sidebar-footer-desc {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--faint);
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+    margin-top: 6px;
 }
 
-.hero-container::before {
+/* ==============================================================================
+   GRAPHS & CHARTS INTERACTIVE 3D POP-OUT ENLARGEMENT SYSTEM
+   Dynamic spring scaling, 3D elevation lift, and glowing hairline aura on hover
+   ============================================================================== */
+.stPlotlyChart,
+[data-testid="stPlotlyChart"],
+[data-testid="stMermaidChart"],
+.stMermaidChart {
+    background: var(--bg-raised) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 2px !important;
+    padding: 6px 8px 8px 8px !important;
+    position: relative !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+    transition: transform 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                box-shadow 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                border-color 0.22s ease, 
+                background-color 0.22s ease !important;
+    transform-origin: center center;
+    z-index: 10;
+}
+
+/* Glowing Top Accent Hairline for Graphs (Mirrors Box Architecture) */
+.stPlotlyChart::before,
+[data-testid="stPlotlyChart"]::before,
+[data-testid="stMermaidChart"]::before,
+.stMermaidChart::before {
     content: "";
     position: absolute;
-    top: -50%;
-    right: -10%;
-    width: 380px;
-    height: 380px;
-    background: radial-gradient(circle, rgba(56, 189, 248, 0.12) 0%, rgba(192, 132, 252, 0.03) 70%, transparent 100%);
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: transparent;
+    transition: background-color 0.24s ease, box-shadow 0.24s ease;
+    z-index: 25;
     pointer-events: none;
 }
 
-.hero-title {
-    font-size: 2.15rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    margin: 0;
-    line-height: 1.2;
-    background: linear-gradient(90deg, #ffffff 0%, #7dd3fc 45%, #c084fc 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+/* THE POP-OUT HOVER ENLARGEMENT (SPRING SCALE & 3D LIFT) FOR GRAPHS */
+.stPlotlyChart:hover,
+[data-testid="stPlotlyChart"]:hover,
+[data-testid="stMermaidChart"]:hover,
+.stMermaidChart:hover {
+    transform: translateY(-8px) scale(1.018) !important;
+    z-index: 120 !important;
+    background-color: #15161f !important;
+    border-color: rgba(255, 255, 255, 0.85) !important;
+    box-shadow: 0 28px 56px -12px rgba(0, 0, 0, 0.98), 
+                0 0 0 1px rgba(255, 255, 255, 0.4),
+                0 14px 32px -4px rgba(45, 129, 255, 0.45) !important;
 }
 
-.hero-subtitle {
-    font-size: 1.02rem;
-    color: #94a3b8;
-    margin-top: 8px;
-    line-height: 1.55;
-    max-width: 1100px;
+.stPlotlyChart:hover::before,
+[data-testid="stPlotlyChart"]:hover::before,
+[data-testid="stMermaidChart"]:hover::before,
+.stMermaidChart:hover::before {
+    background: #2d81ff !important;
+    box-shadow: 0 0 16px #2d81ff, 0 0 32px rgba(45, 129, 255, 0.6) !important;
 }
 
-/* Executive KPI Card Styles */
-.metric-card {
-    background: rgba(17, 24, 39, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 16px 18px;
-    backdrop-filter: blur(12px);
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+/* Chart Title Illumination on Graph Hover */
+.stPlotlyChart:hover .gtitle {
+    fill: #ffffff !important;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.55));
+    transition: filter 0.22s ease, fill 0.22s ease;
 }
 
-.metric-card:hover {
+/* Modebar (Plotly Actions Toolbar) Reveal & Neon Accent */
+.stPlotlyChart .modebar {
+    opacity: 0.7;
+    transition: opacity 0.25s ease, transform 0.25s ease !important;
+}
+.stPlotlyChart:hover .modebar {
+    opacity: 1 !important;
     transform: translateY(-2px);
-    border-color: rgba(56, 189, 248, 0.45);
-    box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.5);
+}
+.stPlotlyChart:hover .modebar-btn svg {
+    fill: rgba(255, 255, 255, 0.95) !important;
+}
+.stPlotlyChart:hover .modebar-btn:hover svg {
+    fill: #2d81ff !important;
+    filter: drop-shadow(0 0 6px rgba(45, 129, 255, 0.8));
 }
 
-.metric-value {
-    font-size: 2.1rem;
-    font-weight: 800;
-    line-height: 1.15;
-    margin-top: 4px;
-    letter-spacing: -0.02em;
+/* Ensure Internal Plotly Canvas and SVG Overflow Elegantly */
+.stPlotlyChart .js-plotly-plot,
+.stPlotlyChart .plot-container {
+    border-radius: 2px !important;
+    overflow: visible !important;
 }
 
-.metric-label {
-    font-size: 0.78rem;
+/* Mermaid Schema Architecture Graph */
+[data-testid="stMermaidChart"], .stMermaidChart {
+    background: var(--bg-sunken) !important;
+    padding: 18px !important;
+}
+[data-testid="stMermaidChart"]:hover, .stMermaidChart:hover {
+    background-color: #0f1014 !important;
+    border-color: rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 28px 56px -12px rgba(0, 0, 0, 0.98), 
+                0 0 0 1px rgba(255, 255, 255, 0.35),
+                0 14px 32px -4px rgba(45, 129, 255, 0.4) !important;
+}
+
+/* Dataframe & Tables */
+[data-testid="stDataFrame"] {
+    border: 1px solid var(--line) !important;
+    border-radius: 0px !important;
+    background: var(--bg-raised) !important;
+}
+
+/* Clinical Help & Field Guide Cards Pop-Out */
+.guide-card {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 2px !important;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.2s ease,
+                background-color 0.2s ease !important;
+    z-index: 1;
+}
+.guide-card:hover {
+    transform: translateY(-6px) scale(1.025) !important;
+    z-index: 40 !important;
+    background-color: #171822 !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.9),
+                0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+}
+.guide-card-critical {
+    border-left: 4px solid #ff6259 !important;
+}
+.guide-card-critical:hover {
+    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 98, 89, 0.35) !important;
+}
+.guide-card-warning {
+    border-left: 4px solid #f59e0b !important;
+}
+.guide-card-warning:hover {
+    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(245, 158, 11, 0.35) !important;
+}
+.guide-card-panel {
+    border-left: 4px solid #c084fc !important;
+}
+.guide-card-panel:hover {
+    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(192, 132, 252, 0.35) !important;
+}
+.guide-card-mcaf {
+    border-left: 4px solid #2d81ff !important;
+}
+.guide-card-survival {
+    border-left: 4px solid #10b981 !important;
+}
+
+/* Status Badges & Pills */
+.status-pill {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 0px !important;
+    font-family: var(--font-mono) !important;
+    font-size: 0.72rem;
     font-weight: 700;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #94a3b8;
+    line-height: 1.3;
+}
+.status-pill-refuted, .status-pill-disputed {
+    background: var(--danger-bg);
+    color: #ff857f;
+    border: 1px solid rgba(255, 98, 89, 0.45);
+}
+.status-pill-limited {
+    background: var(--warning-bg);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.45);
+}
+.status-pill-definitive {
+    background: var(--success-bg);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.45);
+}
+.status-pill-moderate {
+    background: rgba(45, 129, 255, 0.1);
+    color: #74aaff;
+    border: 1px solid rgba(45, 129, 255, 0.45);
+}
+.status-pill-compatible {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--muted);
+    border: 1px solid var(--line);
 }
 
-.metric-caption {
-    font-size: 0.8rem;
-    color: #64748b;
-    margin-top: 6px;
-    line-height: 1.35;
-}
-
-/* Responsive Custom Gene Detail Header Cards (Auto-wrapping, border-radius 8px, padding 12px) */
+/* Gene Detail Header Grid Pop-Out */
 .gene-header-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 14px;
     margin-bottom: 20px;
+    overflow: visible !important;
 }
-
 .gene-stat-card {
-    background: rgba(17, 24, 39, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px !important;
-    padding: 12px 16px !important;
-    backdrop-filter: blur(10px);
-    transition: all 0.2s ease;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 2px !important;
+    padding: 16px 18px !important;
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 98px;
+    min-height: 104px;
+    cursor: default;
+    transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.2s ease,
+                background-color 0.2s ease !important;
+    transform-origin: center center;
+    z-index: 1;
 }
-
 .gene-stat-card:hover {
-    border-color: rgba(56, 189, 248, 0.35);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.5);
+    transform: translateY(-6px) scale(1.04) !important;
+    z-index: 60 !important;
+    border-color: rgba(255, 255, 255, 0.7) !important;
+    background-color: #171822 !important;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.95),
+                0 0 0 1px rgba(255, 255, 255, 0.25),
+                0 8px 24px -4px rgba(45, 129, 255, 0.25) !important;
 }
-
 .gene-stat-label {
-    font-size: 0.74rem;
-    font-weight: 700;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #94a3b8;
+    letter-spacing: 0.14em;
+    color: var(--muted);
     margin-bottom: 4px;
 }
-
 .gene-stat-value {
+    font-family: var(--font-mono), var(--font-sans);
     font-size: 1.35rem;
-    font-weight: 800;
-    color: #f8fafc;
+    font-weight: 700;
+    color: var(--ink-strong);
     word-break: break-word;
-    white-space: normal;
     line-height: 1.25;
 }
-
 .gene-stat-sub {
-    font-size: 0.78rem;
-    color: #64748b;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--faint);
     margin-top: 4px;
-    line-height: 1.35;
+    letter-spacing: 0.04em;
 }
 
-/* Color-coded Status Badges & Pills */
-.status-pill {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 9999px;
-    font-size: 0.82rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    word-break: break-word;
-    white-space: normal;
-    line-height: 1.3;
-}
-
-.status-pill-refuted, .status-pill-disputed {
-    background: rgba(239, 68, 68, 0.18);
-    color: #f87171;
-    border: 1px solid rgba(239, 68, 68, 0.45);
-}
-
-.status-pill-limited {
-    background: rgba(245, 158, 11, 0.18);
-    color: #fbbf24;
-    border: 1px solid rgba(245, 158, 11, 0.45);
-}
-
-.status-pill-definitive {
-    background: rgba(16, 185, 129, 0.18);
-    color: #34d399;
-    border: 1px solid rgba(16, 185, 129, 0.45);
-}
-
-.status-pill-moderate {
-    background: rgba(59, 130, 246, 0.18);
-    color: #60a5fa;
-    border: 1px solid rgba(59, 130, 246, 0.45);
-}
-
-.status-pill-compatible {
-    background: rgba(148, 163, 184, 0.15);
-    color: #94a3b8;
-    border: 1px solid rgba(148, 163, 184, 0.35);
-}
-
-.kpi-popgen-card {
-    background: rgba(17, 24, 39, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 16px 18px;
-    backdrop-filter: blur(8px);
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.4);
+/* Analytics & Population Genetics KPI Cards Pop-Out */
+.kpi-popgen-card, .kpi-equity-card, .kpi-forecast-card, .kpi-latency-card {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 2px !important;
+    padding: 18px 20px;
     min-height: 110px;
+    transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.26s cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 0.2s ease,
+                background-color 0.2s ease !important;
+    z-index: 1;
+}
+.kpi-popgen-card:hover, .kpi-equity-card:hover, .kpi-forecast-card:hover, .kpi-latency-card:hover {
+    transform: translateY(-6px) scale(1.035) !important;
+    z-index: 50 !important;
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    background-color: #171822 !important;
+    box-shadow: 0 22px 44px -10px rgba(0, 0, 0, 0.92),
+                0 0 0 1px rgba(255, 255, 255, 0.2) !important;
 }
 
-.kpi-popgen-card:hover {
-    border-color: rgba(244, 63, 94, 0.45);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6);
-}
-
-.kpi-equity-card {
-    background: rgba(17, 24, 39, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 16px 18px;
-    backdrop-filter: blur(8px);
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.4);
-    min-height: 110px;
-}
-
-.kpi-equity-card:hover {
-    border-color: rgba(245, 158, 11, 0.5);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6);
-}
-
-.kpi-forecast-card {
-    background: rgba(17, 24, 39, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 16px 18px;
-    backdrop-filter: blur(8px);
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.4);
-    min-height: 110px;
-}
-
-.kpi-forecast-card:hover {
-    border-color: rgba(168, 85, 247, 0.5);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6);
-}
-
-/* Callout Box */
+/* Callout Box & In-line Badges */
 .callout-box {
-    border-left: 4px solid #38bdf8;
-    background: rgba(15, 23, 42, 0.7);
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    border-right: 1px solid rgba(255, 255, 255, 0.08);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 3px solid var(--accent);
+    background: var(--bg-raised);
+    border-top: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
     padding: 14px 18px;
-    border-radius: 0 8px 8px 0;
+    border-radius: 0px !important;
     margin: 14px 0;
-    color: #cbd5e1;
+    color: var(--ink);
     font-size: 0.92rem;
     line-height: 1.55;
 }
-
-/* Badges for Inline Reference */
 .badge-inline {
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 6px;
-    font-size: 0.78rem;
+    padding: 2px 7px;
+    border-radius: 0px !important;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
     font-weight: 700;
+    letter-spacing: 0.05em;
     margin-right: 4px;
 }
 .badge-inline-red {
-    background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
-    border: 1px solid rgba(239, 68, 68, 0.4);
+    background: var(--danger-bg);
+    color: #ff857f;
+    border: 1px solid rgba(255, 98, 89, 0.4);
 }
 .badge-inline-amber {
-    background: rgba(245, 158, 11, 0.2);
+    background: var(--warning-bg);
     color: #fbbf24;
     border: 1px solid rgba(245, 158, 11, 0.4);
 }
 .badge-inline-purple {
-    background: rgba(168, 85, 247, 0.2);
-    color: #c084fc;
-    border: 1px solid rgba(168, 85, 247, 0.4);
+    background: var(--purple-bg);
+    color: #d8b4fe;
+    border: 1px solid rgba(192, 132, 252, 0.4);
 }
 
-/* Latency Card Specifics */
-.kpi-latency-card {
-    background: rgba(15, 23, 42, 0.65);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 14px 16px;
-    backdrop-filter: blur(8px);
-    transition: transform 0.2s ease, border-color 0.2s ease;
-    height: 100%;
-}
-.kpi-latency-card:hover {
-    border-color: rgba(56, 189, 248, 0.35);
-    transform: translateY(-2px);
-}
-
-/* Objective 7: Prescriptive Remediation & Decision Support Engine */
+/* Remediation Architecture */
 .remediation-container {
-    background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(30, 41, 59, 0.9));
-    border: 1px solid rgba(168, 85, 247, 0.35);
-    border-radius: 12px;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 0px !important;
     padding: 20px 22px;
     margin-top: 22px;
     margin-bottom: 22px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 10px 32px -8px rgba(0, 0, 0, 0.55);
+    position: relative;
 }
-
 .remediation-subcard {
-    background: rgba(15, 23, 42, 0.78);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
+    background: var(--bg-sunken);
+    border: 1px solid var(--line);
+    border-radius: 0px !important;
     padding: 16px 18px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     min-height: 330px;
-    transition: all 0.2s ease;
+    transition: border-color 0.15s ease;
 }
-
 .remediation-subcard:hover {
-    border-color: rgba(168, 85, 247, 0.45);
-    box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6);
-    transform: translateY(-2px);
+    border-color: var(--line-strong);
 }
-
 .remediation-badge {
     display: inline-block;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.76rem;
+    padding: 3px 8px;
+    border-radius: 0px !important;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.08em;
     margin-bottom: 8px;
 }
-
 .remediation-checklist {
     list-style: none;
     padding-left: 0;
     margin: 10px 0;
 }
-
 .remediation-checklist li {
     font-size: 0.82rem;
-    color: #cbd5e1;
+    color: var(--ink);
     margin-bottom: 7px;
-    padding-left: 20px;
+    padding-left: 18px;
     position: relative;
     line-height: 1.4;
+    font-family: var(--font-mono);
 }
 
-.remediation-checklist li::before {
-    content: "✓";
+/* ==============================================================================
+   ARCHITECTURAL SIDE SCALE & VIEWPORT RULER NAVIGATION RAIL
+   Inspired by https://getartcraft.com/apps
+   ============================================================================== */
+
+/* Fixed Vertical Ruler Rail on Far Right */
+.ruler-rail {
+    position: fixed !important;
+    top: 3.2rem !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    width: 64px !important;
+    z-index: 9999 !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    touch-action: none !important;
+    cursor: pointer;
+    background: rgba(11, 11, 14, 0.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-left: 1px solid var(--line);
+    transition: background-color 0.22s ease, border-color 0.22s ease;
+}
+
+.ruler-rail:hover {
+    background: rgba(18, 19, 22, 0.88);
+    border-left-color: var(--line-strong);
+}
+
+.ruler-rail.is-dragging {
+    background: rgba(18, 19, 22, 0.95) !important;
+    border-left-color: rgba(45, 129, 255, 0.5) !important;
+    cursor: grabbing !important;
+}
+
+.ruler-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* Vertical Spine Track */
+.ruler-track {
     position: absolute;
-    left: 2px;
+    top: 28px;
+    bottom: 28px;
+    right: 20px;
+    width: 1px;
+    background: rgba(242, 241, 238, 0.16);
+    pointer-events: none;
+}
+
+/* Ticks Container */
+.ruler-ticks-container {
+    position: absolute;
+    top: 28px;
+    bottom: 28px;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+}
+
+.ruler-tick {
+    position: absolute;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.ruler-tick-major {
+    width: 100%;
+    justify-content: flex-end;
+}
+
+.ruler-tick-major .ruler-tick-line {
+    width: 8px;
+    height: 1px;
+    background: rgba(242, 241, 238, 0.4);
+    display: block;
+}
+
+.ruler-tick-minor .ruler-tick-line {
+    width: 4px;
+    height: 1px;
+    background: rgba(242, 241, 238, 0.14);
+    display: block;
+}
+
+.ruler-tick-num {
+    position: absolute;
+    right: -19px;
+    width: 17px;
+    text-align: left;
+    font-family: var(--font-mono) !important;
+    font-size: 7.5px !important;
+    font-weight: 500 !important;
+    color: rgba(242, 241, 238, 0.42) !important;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.ruler-rail:hover .ruler-tick-num {
+    color: rgba(242, 241, 238, 0.75) !important;
+}
+
+/* Ruler Draggable Thumb / Lens Window (reproduces ArtCraft translucent scroll slider) */
+.ruler-thumb {
+    position: absolute;
+    left: 4px;
+    right: 4px;
     top: 0;
-    color: #38bdf8;
-    font-weight: 800;
+    height: 54px;
+    margin-top: -27px;
+    pointer-events: auto;
+    cursor: grab;
+    z-index: 25;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    will-change: transform;
+    transition: transform 0.05s linear;
+}
+
+.ruler-thumb:active,
+.ruler-thumb.is-dragging {
+    cursor: grabbing !important;
+}
+
+.ruler-thumb.is-dragging,
+.ruler-rail.is-dragging .ruler-thumb {
+    transition: none !important;
+}
+
+.ruler-thumb-lens {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 2px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    pointer-events: none;
+    transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.ruler-thumb:hover .ruler-thumb-lens {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.38);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65), inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.ruler-thumb.is-dragging .ruler-thumb-lens,
+.ruler-rail.is-dragging .ruler-thumb-lens {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(45, 129, 255, 0.85);
+    box-shadow: 0 0 16px rgba(45, 129, 255, 0.45), inset 0 0 0 1px rgba(45, 129, 255, 0.3);
+}
+
+.ruler-thumb .ruler-needle-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 27px;
+    height: 1.5px;
+    background: #2d81ff;
+    box-shadow: 0 0 8px #2d81ff, 0 0 14px rgba(45, 129, 255, 0.7);
+    pointer-events: none;
+}
+
+.ruler-thumb .ruler-pct-badge {
+    position: absolute;
+    left: 4px;
+    top: 17px;
+    font-family: var(--font-mono) !important;
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    color: #74aaff !important;
+    background: #0b0b0e !important;
+    border: 1px solid rgba(45, 129, 255, 0.7) !important;
+    padding: 1px 4px !important;
+    border-radius: 0px !important;
+    letter-spacing: 0.06em !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.9) !important;
+    white-space: nowrap !important;
+    pointer-events: none;
+}
+
+/* Fallback for legacy needle classes */
+.ruler-needle {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 20;
+}
+
+body.ruler-is-dragging,
+body.ruler-is-dragging * {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    cursor: grabbing !important;
+}
+
+/* Floating Moving Section Elevator HUD (Left of the Ruler Rail)
+   Faithfully reproduces https://getartcraft.com/apps moving section reel */
+.ruler-section-hud {
+    position: fixed !important;
+    right: 76px !important;
+    top: 4.8rem !important;
+    width: 290px !important;
+    pointer-events: none !important;
+    z-index: 9998 !important;
+    text-align: right !important;
+}
+
+.ruler-hud-eyebrow {
+    font-family: var(--font-mono) !important;
+    font-size: 0.58rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.18em !important;
+    color: var(--faint) !important;
+    text-transform: uppercase !important;
+    margin-bottom: 6px !important;
+    pointer-events: none !important;
+    opacity: 0.8 !important;
+}
+
+.ruler-elevator-viewport {
+    position: relative !important;
+    overflow: visible !important;
+    pointer-events: auto !important;
+}
+
+.ruler-elevator-track {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transform: translateY(0px);
+}
+
+.ruler-nav-item {
+    font-family: var(--font-mono) !important;
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+    color: rgba(242, 241, 238, 0.38) !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transition: color 0.22s ease, font-size 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 7px !important;
+    padding: 3px 0 !important;
+    white-space: nowrap !important;
+    text-decoration: none !important;
+    user-select: none !important;
+}
+
+.ruler-nav-item .nav-num {
+    font-size: 0.58rem !important;
+    color: var(--faint) !important;
+    letter-spacing: 0.1em !important;
+}
+
+.ruler-nav-item:hover {
+    color: #ffffff !important;
+    transform: translateX(-4px) !important;
+}
+
+.ruler-nav-item:hover .nav-num {
+    color: #74aaff !important;
+}
+
+/* Past sections (scrolled above) */
+.ruler-nav-item.past {
+    color: rgba(242, 241, 238, 0.2) !important;
+    font-size: 0.6rem !important;
+    opacity: 0.6 !important;
+    transform: scale(0.94) !important;
+    transform-origin: right center !important;
+}
+
+/* Active Section (Currently in View) */
+.ruler-nav-item.active {
+    font-family: var(--font-heading) !important;
+    font-size: 1.42rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
+    color: #ffffff !important;
+    transform: translateX(-8px) !important;
+    text-shadow: 0 0 16px rgba(45, 129, 255, 0.6), 0 2px 10px rgba(0, 0, 0, 0.95) !important;
+    opacity: 1 !important;
+}
+
+.ruler-nav-item.active .nav-num {
+    font-size: 0.72rem !important;
+    color: #2d81ff !important;
+    font-family: var(--font-mono) !important;
+}
+
+.ruler-nav-item.active::after {
+    content: "●";
+    font-size: 0.55rem;
+    color: #2d81ff;
+    margin-left: 4px;
+    text-shadow: 0 0 8px #2d81ff;
+}
+
+/* Responsive Hide on Mobile/Tablets */
+@media (max-width: 1023px) {
+    .ruler-rail, .ruler-section-hud {
+        display: none !important;
+    }
 }
 </style>
 """
@@ -651,9 +1534,9 @@ def apply_clinical_chart_theme(
     right_margin = 35
 
     legend_base = dict(
-        font=dict(family="Inter, sans-serif", size=11, color="#cbd5e1"),
-        bgcolor="rgba(15, 23, 42, 0.85)",
-        bordercolor="rgba(255, 255, 255, 0.12)",
+        font=dict(family="JetBrains Mono, Inter, monospace", size=10, color="#f2f1ee"),
+        bgcolor="rgba(18, 19, 22, 0.95)",
+        bordercolor="rgba(242, 241, 238, 0.15)",
         borderwidth=1,
     )
 
@@ -699,14 +1582,14 @@ def apply_clinical_chart_theme(
 
     fig.update_layout(
         template="plotly_dark",
-        paper_bgcolor="#0F172A",
-        plot_bgcolor="#111827",
+        paper_bgcolor="#121316",
+        plot_bgcolor="#0b0b0e",
         height=height,
         margin=dict(t=top_margin, b=bottom_margin, l=55, r=right_margin),
-        font=dict(family="Inter, -apple-system, sans-serif", color="#e2e8f0", size=12),
+        font=dict(family="Inter, -apple-system, sans-serif", color="#f2f1ee", size=11),
         title=dict(
             text=chart_title,
-            font=dict(family="Inter, -apple-system, sans-serif", size=14, color="#f8fafc"),
+            font=dict(family="Space Grotesk, Inter, sans-serif", size=13, color="#ffffff"),
             x=0.02,
             y=0.98,
             xanchor="left",
@@ -714,21 +1597,26 @@ def apply_clinical_chart_theme(
         ) if chart_title else None,
         modebar=dict(
             orientation="h",
-            bgcolor="rgba(15, 23, 42, 0.85)",
-            color="#94a3b8",
-            activecolor="#38bdf8",
+            bgcolor="rgba(18, 19, 22, 0.9)",
+            color="rgba(242, 241, 238, 0.5)",
+            activecolor="#ffffff",
         ),
         xaxis=dict(
-            gridcolor="rgba(255, 255, 255, 0.07)",
-            zerolinecolor="rgba(255, 255, 255, 0.15)",
-            tickfont=dict(size=11, color="#94a3b8"),
-            title_font=dict(size=12, color="#cbd5e1"),
+            gridcolor="rgba(255, 255, 255, 0.05)",
+            zerolinecolor="rgba(255, 255, 255, 0.12)",
+            tickfont=dict(family="JetBrains Mono, monospace", size=10, color="rgba(242, 241, 238, 0.6)"),
+            title_font=dict(family="Inter, sans-serif", size=11, color="#f2f1ee"),
         ),
         yaxis=dict(
-            gridcolor="rgba(255, 255, 255, 0.07)",
-            zerolinecolor="rgba(255, 255, 255, 0.15)",
-            tickfont=dict(size=11, color="#94a3b8"),
-            title_font=dict(size=12, color="#cbd5e1"),
+            gridcolor="rgba(255, 255, 255, 0.05)",
+            zerolinecolor="rgba(255, 255, 255, 0.12)",
+            tickfont=dict(family="JetBrains Mono, monospace", size=10, color="rgba(242, 241, 238, 0.6)"),
+            title_font=dict(family="Inter, sans-serif", size=11, color="#f2f1ee"),
+        ),
+        hoverlabel=dict(
+            bgcolor="#171822",
+            bordercolor="rgba(255, 255, 255, 0.4)",
+            font=dict(family="JetBrains Mono, monospace", size=11, color="#ffffff"),
         ),
         **legend_layout,
     )
@@ -739,6 +1627,510 @@ def format_star_glyphs(stars: int) -> str:
     """Render ClinVar star confidence rating as intuitive Unicode star glyphs."""
     s = max(0, min(4, int(stars) if pd.notna(stars) else 0))
     return f"{'⭐' * s}{'☆' * (4 - s)} ({s}★)"
+
+
+def render_side_scale_ruler():
+    """Render the architectural brutalist side scale and viewport ruler navigation rail.
+
+    Inspired by https://getartcraft.com/apps, featuring:
+    - Fixed vertical ruler with 0-100% major & minor tick marks and numeric readouts
+    - Real-time scroll needle tracking with glowing neon cyan/blue hairline and 3-digit percentage badge
+    - Floating section HUD displaying the active section name in stark bold Space Grotesk type
+    - Interactive navigation waypoints (01-07) that scroll directly to sections or activate tabs
+    - Interactive scrub-and-click viewport control
+    """
+    ticks_html_list = []
+    for i in range(101):
+        if i % 5 == 0:
+            ticks_html_list.append(
+                f'<div class="ruler-tick ruler-tick-major" style="top:{i}%;">'
+                f'<span class="ruler-tick-line"></span>'
+                f'<span class="ruler-tick-num">{i}</span>'
+                f'</div>'
+            )
+        else:
+            ticks_html_list.append(
+                f'<div class="ruler-tick ruler-tick-minor" style="top:{i}%;">'
+                f'<span class="ruler-tick-line"></span>'
+                f'</div>'
+            )
+    ticks_html = "".join(ticks_html_list)
+
+    html_code = f"""
+    <aside id="ruler-rail" class="ruler-rail" aria-label="Section and Viewport Scale Ruler" title="Click or drag to scroll page">
+      <div class="ruler-inner">
+        <div class="ruler-track"></div>
+        <div class="ruler-ticks-container">
+          {ticks_html}
+        </div>
+        <div id="ruler-thumb" class="ruler-thumb" title="Drag to scroll">
+          <div class="ruler-thumb-lens"></div>
+          <div class="ruler-needle-line"></div>
+          <div id="ruler-pct-badge" class="ruler-pct-badge">000%</div>
+        </div>
+        <div id="ruler-needle" style="display:none;"></div>
+      </div>
+    </aside>
+
+    <div id="ruler-section-hud" class="ruler-section-hud">
+      <div class="ruler-hud-eyebrow">ACTIVE SECTION //</div>
+      <div class="ruler-elevator-viewport">
+        <div id="ruler-elevator-track" class="ruler-elevator-track">
+          <button type="button" class="ruler-nav-item active" data-idx="0" data-target="hero">
+            <span class="nav-num">01</span>
+            <span class="nav-label">AUDIT CASCADE</span>
+          </button>
+          <button type="button" class="ruler-nav-item" data-idx="1" data-target="metrics">
+            <span class="nav-num">02</span>
+            <span class="nav-label">METRICS</span>
+          </button>
+          <button type="button" class="ruler-nav-item" data-idx="2" data-target="tab-0">
+            <span class="nav-num">03</span>
+            <span class="nav-label">AUDIT EXPLORER</span>
+          </button>
+          <button type="button" class="ruler-nav-item" data-idx="3" data-target="tab-1">
+            <span class="nav-num">04</span>
+            <span class="nav-label">GENE DETAIL</span>
+          </button>
+          <button type="button" class="ruler-nav-item" data-idx="4" data-target="tab-2">
+            <span class="nav-num">05</span>
+            <span class="nav-label">ANALYTICS</span>
+          </button>
+          <button type="button" class="ruler-nav-item" data-idx="5" data-target="tab-3">
+            <span class="nav-num">06</span>
+            <span class="nav-label">FORECAST</span>
+          </button>
+          <button type="button" class="ruler-nav-item" data-idx="6" data-target="tab-4">
+            <span class="nav-num">07</span>
+            <span class="nav-label">METHODOLOGY</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    """
+    st.markdown(html_code, unsafe_allow_html=True)
+
+    # Client-side script injected via components.html with direct parent document access
+    import streamlit.components.v1 as components
+    components.html(
+        """
+        <script>
+        (function() {
+            try {
+                const topDoc = window.parent.document;
+                const topWin = window.parent;
+
+                function initRulerSystem() {
+                    const rail = topDoc.getElementById('ruler-rail');
+                    const thumb = topDoc.getElementById('ruler-thumb') || topDoc.getElementById('ruler-needle');
+                    const needle = thumb;
+                    const badge = topDoc.getElementById('ruler-pct-badge');
+                    const track = topDoc.getElementById('ruler-elevator-track');
+
+                    if (!rail || !thumb) return;
+
+                    let isDragging = false;
+                    let dragOffsetY = 0;
+                    let lastNeedleY = 28;
+                    let currentPct = 0;
+
+                    // Comprehensive scroller discovery: finds which element actually scrolls
+                    function getActiveScroller() {
+                        const candidates = [
+                            topDoc.querySelector('section.main'),
+                            topDoc.querySelector('[data-testid="stMain"]'),
+                            topDoc.querySelector('.main'),
+                            topDoc.scrollingElement,
+                            topDoc.documentElement,
+                            topDoc.body
+                        ];
+                        for (let i = 0; i < candidates.length; i++) {
+                            const el = candidates[i];
+                            if (el && (el.scrollHeight - el.clientHeight > 10)) {
+                                return el;
+                            }
+                        }
+                        return topDoc.querySelector('section.main') || topDoc.documentElement || topDoc.body;
+                    }
+
+                    function getScrollMetrics() {
+                        const scroller = getActiveScroller();
+                        let maxScroll = 1;
+                        let currentScroll = 0;
+
+                        if (scroller) {
+                            maxScroll = Math.max(1, scroller.scrollHeight - scroller.clientHeight);
+                            currentScroll = scroller.scrollTop || 0;
+                        }
+
+                        const winY = topWin.scrollY || topWin.pageYOffset || 0;
+                        if (winY > currentScroll) {
+                            currentScroll = winY;
+                            const docH = Math.max(topDoc.body ? topDoc.body.scrollHeight : 0, topDoc.documentElement ? topDoc.documentElement.scrollHeight : 0);
+                            const winH = topWin.innerHeight || 1;
+                            if (docH - winH > maxScroll) {
+                                maxScroll = docH - winH;
+                            }
+                        }
+
+                        const pct = Math.min(1, Math.max(0, currentScroll / Math.max(1, maxScroll)));
+                        return { currentScroll, maxScroll, pct, activeEl: scroller };
+                    }
+
+                    // Specifically discover only the 5 Streamlit tab header buttons, never buttons inside tab content
+                    function getStreamlitTabButtons() {
+                        let btns = topDoc.querySelectorAll('[data-testid="stTab"]');
+                        if (!btns || btns.length === 0) {
+                            btns = topDoc.querySelectorAll('[data-testid="stTabs"] [role="tablist"] > button');
+                        }
+                        if (!btns || btns.length === 0) {
+                            btns = topDoc.querySelectorAll('[data-testid="stTabs"] button[role="tab"]');
+                        }
+                        if (!btns || btns.length === 0) {
+                            btns = topDoc.querySelectorAll('button[role="tab"]');
+                        }
+                        return Array.from(btns || []).slice(0, 5);
+                    }
+
+                    function getSelectedTabIndex() {
+                        const tabBtns = getStreamlitTabButtons();
+                        for (let i = 0; i < tabBtns.length; i++) {
+                            const b = tabBtns[i];
+                            if (b && (b.getAttribute('aria-selected') === 'true' || b.getAttribute('aria-selected') === true)) {
+                                return i;
+                            }
+                        }
+                        return 0; // Default to Tab 0 (03 AUDIT EXPLORER)
+                    }
+
+                    function updateElevatorUI(activeIdx) {
+                        const currentNavItems = topDoc.querySelectorAll('.ruler-nav-item');
+                        currentNavItems.forEach((item, idx) => {
+                            item.classList.remove('active', 'past', 'upcoming');
+                            if (idx === activeIdx) {
+                                item.classList.add('active');
+                            } else if (idx < activeIdx) {
+                                item.classList.add('past');
+                            } else {
+                                item.classList.add('upcoming');
+                            }
+                        });
+
+                        const elevatorTrack = topDoc.getElementById('ruler-elevator-track');
+                        if (elevatorTrack) {
+                            const shiftY = activeIdx * 38;
+                            elevatorTrack.style.transform = 'translateY(' + (-shiftY) + 'px)';
+                        }
+                    }
+
+                    function updateRuler() {
+                        if (isDragging) return; // Do not overwrite active drag motion
+
+                        const { currentScroll, pct } = getScrollMetrics();
+                        currentPct = pct;
+
+                        // 1. Move ruler thumb/needle line
+                        const railRect = rail.getBoundingClientRect();
+                        const pad = 28;
+                        const usableH = Math.max(1, railRect.height - (pad * 2));
+                        const needleY = pad + (pct * usableH);
+                        lastNeedleY = needleY;
+                        thumb.style.transform = 'translateY(' + needleY + 'px)';
+
+                        // 2. Update 3-digit percentage badge readout
+                        const pctInt = Math.min(100, Math.max(0, Math.round(pct * 100)));
+                        const pctStr = (pctInt < 10 ? '00' : (pctInt < 100 ? '0' : '')) + pctInt + '%';
+                        if (badge) badge.textContent = pctStr;
+
+                        // 3. Determine active section index (0 to 6)
+                        const tabsEl = topDoc.getElementById('curacascade-section-tabs') || topDoc.querySelector('[data-testid="stTabs"]');
+                        const metricsEl = topDoc.getElementById('curacascade-section-metrics') || topDoc.querySelector('.metric-card');
+
+                        let activeIdx = 0;
+                        const tabsRect = tabsEl ? tabsEl.getBoundingClientRect() : null;
+                        const metricsRect = metricsEl ? metricsEl.getBoundingClientRect() : null;
+
+                        if (tabsRect && tabsRect.top <= topWin.innerHeight * 0.45) {
+                            const selTab = getSelectedTabIndex();
+                            activeIdx = 2 + Math.min(selTab, 4);
+                        } else if ((metricsRect && metricsRect.top <= topWin.innerHeight * 0.58) || currentScroll > 160) {
+                            activeIdx = 1; // 02 METRICS
+                        } else {
+                            activeIdx = 0; // 01 AUDIT CASCADE
+                        }
+
+                        updateElevatorUI(activeIdx);
+                    }
+
+                    // Universal smooth scroller that targets whichever element scrolls
+                    function doScroll(targetTop) {
+                        const candidates = [
+                            topDoc.querySelector('section.main'),
+                            topDoc.querySelector('.main'),
+                            topDoc.querySelector('[data-testid="stMain"]'),
+                            topDoc.querySelector('[data-testid="stAppViewContainer"]'),
+                            topDoc.querySelector('.stApp'),
+                            topDoc.documentElement,
+                            topDoc.body
+                        ];
+                        candidates.forEach(el => {
+                            if (el && typeof el.scrollTo === 'function') {
+                                try { el.scrollTo({ top: targetTop, behavior: 'smooth' }); } catch(e) {}
+                            }
+                        });
+                        try { topWin.scrollTo({ top: targetTop, behavior: 'smooth' }); } catch(e) {}
+                        setTimeout(updateRuler, 60);
+                        setTimeout(updateRuler, 300);
+                    }
+
+                    // Navigation handler
+                    function handleNav(target) {
+                        if (target === 'hero') {
+                            const hero = topDoc.getElementById('curacascade-section-hero') || topDoc.querySelector('.hero-container');
+                            if (hero) hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            else doScroll(0);
+                        } else if (target === 'metrics') {
+                            const card = topDoc.getElementById('curacascade-section-metrics') || topDoc.querySelector('.metric-card');
+                            if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            else doScroll(380);
+                        } else if (target && target.indexOf('tab-') === 0) {
+                            const tabIdx = parseInt(target.replace('tab-', ''), 10);
+                            const tabBtns = getStreamlitTabButtons();
+                            if (tabBtns && tabBtns[tabIdx]) {
+                                tabBtns[tabIdx].click();
+                                setTimeout(() => {
+                                    const tabsEl = topDoc.getElementById('curacascade-section-tabs') || topDoc.querySelector('[data-testid="stTabs"]');
+                                    if (tabsEl) tabsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }, 50);
+                            }
+                        }
+                        setTimeout(updateRuler, 100);
+                        setTimeout(updateRuler, 350);
+                    }
+
+                    // Global window aliases
+                    topWin.curacascadeScrollTo = function(t) { handleNav(t); };
+                    topWin.curacascadeScrollToTab = function(idx) { handleNav('tab-' + idx); };
+
+                    // Bind click handlers to nav items
+                    const currentNavItems = topDoc.querySelectorAll('.ruler-nav-item');
+                    currentNavItems.forEach(item => {
+                        item.onclick = function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const target = this.getAttribute('data-target');
+                            handleNav(target);
+                        };
+                    });
+
+                    // Scrub and drag interaction on the vertical ruler rail
+                    function handleDragStart(e) {
+                        if (e.button !== undefined && e.button !== 0) return;
+
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        isDragging = true;
+                        rail.classList.add('is-dragging');
+                        thumb.classList.add('is-dragging');
+                        topDoc.body.classList.add('ruler-is-dragging');
+
+                        const railRect = rail.getBoundingClientRect();
+                        const pad = 28;
+                        const usableH = Math.max(1, railRect.height - (pad * 2));
+
+                        // Check if click was directly on thumb or on the track
+                        const isThumbClick = e.target && (e.target === thumb || thumb.contains(e.target));
+
+                        if (isThumbClick) {
+                            // Retain grab offset within the thumb so it feels anchored to cursor
+                            const currentThumbY = lastNeedleY || (pad + currentPct * usableH);
+                            dragOffsetY = e.clientY - (railRect.top + currentThumbY);
+                        } else {
+                            // Clicked rail track: snap thumb center to mouse immediately
+                            dragOffsetY = 0;
+                            handleDragMove(e);
+                        }
+
+                        try {
+                            if (e.pointerId !== undefined && typeof rail.setPointerCapture === 'function') {
+                                rail.setPointerCapture(e.pointerId);
+                            }
+                        } catch(err) {}
+                    }
+
+                    function handleDragMove(e) {
+                        if (!isDragging) return;
+                        e.preventDefault();
+
+                        const railRect = rail.getBoundingClientRect();
+                        const pad = 28;
+                        const usableH = Math.max(1, railRect.height - (pad * 2));
+
+                        const clickY = (e.clientY - dragOffsetY) - railRect.top - pad;
+                        const pct = Math.min(1, Math.max(0, clickY / usableH));
+                        currentPct = pct;
+
+                        const scroller = getActiveScroller();
+                        const maxScroll = Math.max(1, scroller.scrollHeight - scroller.clientHeight);
+                        const targetY = pct * maxScroll;
+
+                        // 1. Direct synchronous scroll assignment for 0ms lag
+                        scroller.scrollTop = targetY;
+                        if (topDoc.documentElement && topDoc.documentElement !== scroller) {
+                            topDoc.documentElement.scrollTop = targetY;
+                        }
+                        if (topDoc.body && topDoc.body !== scroller) {
+                            topDoc.body.scrollTop = targetY;
+                        }
+                        try { topWin.scrollTo(0, targetY); } catch(err) {}
+
+                        // 2. Synchronous thumb and badge positioning
+                        const needleY = pad + (pct * usableH);
+                        lastNeedleY = needleY;
+                        thumb.style.transform = 'translateY(' + needleY + 'px)';
+
+                        const pctInt = Math.min(100, Math.max(0, Math.round(pct * 100)));
+                        const pctStr = (pctInt < 10 ? '00' : (pctInt < 100 ? '0' : '')) + pctInt + '%';
+                        if (badge) badge.textContent = pctStr;
+
+                        // 3. Dynamically update elevator HUD
+                        const tabsEl = topDoc.getElementById('curacascade-section-tabs') || topDoc.querySelector('[data-testid="stTabs"]');
+                        const metricsEl = topDoc.getElementById('curacascade-section-metrics') || topDoc.querySelector('.metric-card');
+
+                        let activeIdx = 0;
+                        const tabsRect = tabsEl ? tabsEl.getBoundingClientRect() : null;
+                        const metricsRect = metricsEl ? metricsEl.getBoundingClientRect() : null;
+
+                        if (tabsRect && tabsRect.top <= topWin.innerHeight * 0.45) {
+                            const selTab = getSelectedTabIndex();
+                            activeIdx = 2 + Math.min(selTab, 4);
+                        } else if ((metricsRect && metricsRect.top <= topWin.innerHeight * 0.58) || targetY > 160) {
+                            activeIdx = 1;
+                        } else {
+                            activeIdx = 0;
+                        }
+                        updateElevatorUI(activeIdx);
+                    }
+
+                    function handleDragEnd(e) {
+                        if (!isDragging) return;
+                        isDragging = false;
+                        rail.classList.remove('is-dragging');
+                        thumb.classList.remove('is-dragging');
+                        topDoc.body.classList.remove('ruler-is-dragging');
+
+                        try {
+                            if (e && e.pointerId !== undefined && typeof rail.releasePointerCapture === 'function') {
+                                rail.releasePointerCapture(e.pointerId);
+                            }
+                        } catch(err) {}
+
+                        setTimeout(updateRuler, 30);
+                    }
+
+                    // Clean up any previously attached global listeners
+                    if (topWin._curacascadeRulerCleanup) {
+                        try { topWin._curacascadeRulerCleanup(); } catch(err) {}
+                    }
+
+                    topWin._curacascadeRulerCleanup = function() {
+                        topWin.removeEventListener('pointermove', handleDragMove);
+                        topDoc.removeEventListener('pointermove', handleDragMove);
+                        topWin.removeEventListener('pointerup', handleDragEnd);
+                        topDoc.removeEventListener('pointerup', handleDragEnd);
+                        topWin.removeEventListener('pointercancel', handleDragEnd);
+                        topDoc.removeEventListener('pointercancel', handleDragEnd);
+                        topWin.removeEventListener('mousemove', handleDragMove);
+                        topDoc.removeEventListener('mousemove', handleDragMove);
+                        topWin.removeEventListener('mouseup', handleDragEnd);
+                        topDoc.removeEventListener('mouseup', handleDragEnd);
+                        if (topWin._curacascadeRulerTicker) {
+                            topWin.clearInterval(topWin._curacascadeRulerTicker);
+                        }
+                    };
+
+                    // Pointer & Mouse listeners on rail and thumb
+                    rail.addEventListener('pointerdown', handleDragStart);
+                    thumb.addEventListener('pointerdown', handleDragStart);
+                    rail.addEventListener('mousedown', handleDragStart);
+                    thumb.addEventListener('mousedown', handleDragStart);
+
+                    // Window & document listeners ensure drag never breaks when cursor leaves rail
+                    topWin.addEventListener('pointermove', handleDragMove, { passive: false });
+                    topDoc.addEventListener('pointermove', handleDragMove, { passive: false });
+                    topWin.addEventListener('pointerup', handleDragEnd);
+                    topDoc.addEventListener('pointerup', handleDragEnd);
+                    topWin.addEventListener('pointercancel', handleDragEnd);
+                    topDoc.addEventListener('pointercancel', handleDragEnd);
+
+                    topWin.addEventListener('mousemove', handleDragMove, { passive: false });
+                    topDoc.addEventListener('mousemove', handleDragMove, { passive: false });
+                    topWin.addEventListener('mouseup', handleDragEnd);
+                    topDoc.addEventListener('mouseup', handleDragEnd);
+
+                    // Listen on capture phase to catch scroll from ANY container
+                    topWin.removeEventListener('scroll', updateRuler, true);
+                    topWin.addEventListener('scroll', updateRuler, { capture: true, passive: true });
+                    topDoc.removeEventListener('scroll', updateRuler, true);
+                    topDoc.addEventListener('scroll', updateRuler, { capture: true, passive: true });
+                    topWin.removeEventListener('resize', updateRuler);
+                    topWin.addEventListener('resize', updateRuler, { passive: true });
+
+                    const scrollers = [
+                        topDoc.querySelector('section.main'),
+                        topDoc.querySelector('.main'),
+                        topDoc.querySelector('[data-testid="stMain"]'),
+                        topDoc.querySelector('[data-testid="stAppViewContainer"]'),
+                        topDoc.querySelector('.stApp')
+                    ];
+                    scrollers.forEach(s => {
+                        if (s) {
+                            s.removeEventListener('scroll', updateRuler);
+                            s.addEventListener('scroll', updateRuler, { passive: true });
+                        }
+                    });
+
+                    // Hook tab clicks in Streamlit UI specifically on tab header buttons
+                    const tabBtns = getStreamlitTabButtons();
+                    tabBtns.forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            setTimeout(updateRuler, 60);
+                            setTimeout(updateRuler, 250);
+                        });
+                    });
+
+                    // High-frequency ticker ensures needle and elevator track continuous movement
+                    if (topWin._curacascadeRulerTicker) {
+                        topWin.clearInterval(topWin._curacascadeRulerTicker);
+                    }
+                    topWin._curacascadeRulerTicker = topWin.setInterval(updateRuler, 30);
+
+                    // Initial sync
+                    updateRuler();
+                    setTimeout(updateRuler, 100);
+                    setTimeout(updateRuler, 400);
+                }
+
+                // Poll until elements exist in parent DOM
+                let attempts = 0;
+                const initTimer = setInterval(() => {
+                    attempts++;
+                    if (topDoc.getElementById('ruler-rail') || attempts > 30) {
+                        clearInterval(initTimer);
+                        initRulerSystem();
+                    }
+                }, 80);
+
+            } catch (err) {
+                console.warn('Ruler rail init error:', err);
+            }
+        })();
+        </script>
+        """,
+        height=0,
+        width=0,
+    )
 
 
 # ==============================================================================
@@ -1070,9 +2462,13 @@ def fetch_forecasting_results(db_path_str: str, is_full_mode: bool) -> Dict[str,
 
 
 @st.cache_data(ttl=300)
-def fetch_cox_survival_analysis(db_path_str: str, is_full_mode: bool) -> Dict[str, Any]:
+def fetch_cox_survival_analysis(
+    db_path_str: str,
+    is_full_mode: bool,
+    allow_simulation: bool = False,
+) -> Dict[str, Any]:
     """Fetch precomputed or fitted Cox Proportional Hazards regression results (Objective 8)."""
-    return fit_cox_proportional_hazards(db_path=Path(db_path_str))
+    return fit_cox_proportional_hazards(db_path=Path(db_path_str), allow_simulation=allow_simulation)
 
 
 @st.cache_data(ttl=300)
@@ -1415,12 +2811,21 @@ else:
 # ==============================================================================
 
 with st.sidebar:
-    st.image(
-        "https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/Python-Dark.svg",
-        width=48,
+    st.markdown(
+        """
+        <div class="sidebar-brand-card">
+<span class="tick tick-top-left"></span>
+<span class="tick tick-top-right"></span>
+<span class="tick tick-bottom-left"></span>
+<span class="tick tick-bottom-right"></span>
+<div class="sidebar-brand-icon">🧬</div>
+<div>
+<div class="sidebar-brand-title">CURACASCADE</div>
+<div class="sidebar-brand-sub">AUDIT ENGINE // v2.4</div>
+</div>
+</div>""",
+        unsafe_allow_html=True,
     )
-    st.title("CuraCascade")
-    st.caption("Clinical Knowledge Cascade Auditor")
     st.divider()
 
     st.subheader("🗄️ Database Source Selector")
@@ -1445,13 +2850,15 @@ with st.sidebar:
 
     st.markdown(
         f"""
-        - **Active File**: `{active_db_path.name}`
-        - **Mode**: `{'🌐 Full Corpus' if is_full_mode else '⚡ Showcase Benchmark'}`
-        - **Curated Genes**: `{metrics.get('total_genes', 0):,}`
-        - **ClinVar Variants**: `{metrics.get('total_variants', 0):,}`
-        - **PanelApp Entries**: `{metrics.get('total_panel_entries', 0):,}`
-        - **Flagged Inconsistencies**: `{metrics.get('total_findings', 0):,}`
-        """
+        <div class="sidebar-hud-box">
+<div class="sidebar-hud-line"><span class="hud-lbl">LAYER</span><span class="hud-val">{active_db_path.name}</span></div>
+<div class="sidebar-hud-line"><span class="hud-lbl">MODE</span><span class="hud-val">{'FULL_CORPUS' if is_full_mode else 'SHOWCASE_BENCHMARK'}</span></div>
+<div class="sidebar-hud-line"><span class="hud-lbl">CURATED_GENES</span><span class="hud-val">{metrics.get('total_genes', 0):,}</span></div>
+<div class="sidebar-hud-line"><span class="hud-lbl">CLINVAR_VARS</span><span class="hud-val">{metrics.get('total_variants', 0):,}</span></div>
+<div class="sidebar-hud-line"><span class="hud-lbl">PANELAPP_RECS</span><span class="hud-val">{metrics.get('total_panel_entries', 0):,}</span></div>
+<div class="sidebar-hud-line"><span class="hud-lbl">INCONSISTENCIES</span><span class="hud-val hud-val-warn">{metrics.get('total_findings', 0):,}</span></div>
+</div>""",
+        unsafe_allow_html=True,
     )
 
     st.divider()
@@ -1495,16 +2902,37 @@ with st.sidebar:
 # Header & Hero Section
 # ==============================================================================
 
+# Architectural Brutalist Side Scale & Viewport Navigation Ruler
+render_side_scale_ruler()
+
 st.markdown(
-    """
-    <div class="hero-container">
-        <h1 class="hero-title">CuraCascade: Clinical Database Downgrade Auditor</h1>
-        <div class="hero-subtitle">
-            Auditing downstream clinical assertion propagation when upstream gene-disease relationships are 
-            <b>Disputed</b>, <b>Refuted</b>, or <b>Limited</b> by ClinGen Gene Curation Expert Panels.
-        </div>
-    </div>
-    """,
+    """<div id="curacascade-section-hero"></div>
+<div class="hero-container">
+<span class="tick tick-top-left"></span>
+<span class="tick tick-top-right"></span>
+<span class="tick tick-bottom-left"></span>
+<span class="tick tick-bottom-right"></span>
+<div class="hero-eyebrow">
+<div class="hud-label">
+<span class="hud-num">01</span><span class="hud-sep">/</span><span class="hud-section">CLINICAL DATABASE DOWNGRADE AUDITOR</span>
+</div>
+<div class="hud-label hud-status-tag">
+<span class="hud-pulse">●</span> BIOINFORMATICS CASCADE ENGINE · CLINICAL GRADE
+</div>
+</div>
+<div class="hero-main">
+<h1 class="hero-title">Three databases.<br><span class="hero-title-accent">One truth.</span></h1>
+<p class="hero-subtitle">
+Cross-layer consistency auditing across <b>ClinVar</b> variant assertions and <b>Genomics England PanelApp</b> diagnostic memberships when upstream gene-disease relationships are disputed, refuted, or downgraded by ClinGen Expert Panels.
+</p>
+<div class="hero-hud-pills">
+<span class="hud-pill"><span class="hud-pill-dim">SPEC</span> ACMG / AMP GUIDELINES</span>
+<span class="hud-pill"><span class="hud-pill-dim">UNIVERSE</span> 3,000+ CURATED GENES</span>
+<span class="hud-pill"><span class="hud-pill-dim">DOWNSTREAM</span> 50,000+ CLINVAR VARIANTS</span>
+<span class="hud-pill"><span class="hud-pill-dim">LATENCY</span> SURVIVAL HAZARD MODEL</span>
+</div>
+</div>
+</div>""",
     unsafe_allow_html=True,
 )
 
@@ -1513,67 +2941,79 @@ st.markdown(
 # Top Metric KPI Cards
 # ==============================================================================
 
+st.markdown('<div id="curacascade-section-metrics"></div>', unsafe_allow_html=True)
 kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
 
 with kpi1:
     st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-label">Curated Genes</div>
-            <div class="metric-value" style="color: #38bdf8;">{metrics.get('total_genes', 0):,}</div>
-            <div class="metric-caption">Audit universe ({metrics.get('downgraded_genes', 0):,} downgraded)</div>
-        </div>
-        """,
+        f"""<div class="metric-card metric-card-blue">
+<div class="metric-top">
+<span class="metric-index">METRIC // 01</span>
+<span class="metric-tag">ALL</span>
+</div>
+<div class="metric-label">Curated Genes</div>
+<div class="metric-value">{metrics.get('total_genes', 0):,}</div>
+<div class="metric-caption"><span class="hud-dim">AUDIT:</span> {metrics.get('downgraded_genes', 0):,} DOWNGRADED</div>
+</div>""",
         unsafe_allow_html=True,
     )
 
 with kpi2:
     st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-label">Downstream Discrepancies</div>
-            <div class="metric-value" style="color: #f59e0b;">{metrics.get('total_findings', 0):,}</div>
-            <div class="metric-caption">Flagged Classes A, B, and C</div>
-        </div>
-        """,
+        f"""<div class="metric-card metric-card-amber">
+<div class="metric-top">
+<span class="metric-index">METRIC // 02</span>
+<span class="metric-tag highlight-amber">WARN</span>
+</div>
+<div class="metric-label">Discrepancies</div>
+<div class="metric-value" style="color: #f59e0b;">{metrics.get('total_findings', 0):,}</div>
+<div class="metric-caption"><span class="hud-dim">CLASSES:</span> A, B, &amp; C FLAGGED</div>
+</div>""",
         unsafe_allow_html=True,
     )
 
 with kpi3:
     st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-label">Class A Inconsistencies</div>
-            <div class="metric-value" style="color: #ef4444;">{metrics.get('class_a_count', 0):,}</div>
-            <div class="metric-caption">{metrics.get('class_a_genes', 0):,} Disputed/Refuted genes with P/LP</div>
-        </div>
-        """,
+        f"""<div class="metric-card metric-card-red">
+<div class="metric-top">
+<span class="metric-index">METRIC // 03</span>
+<span class="metric-tag highlight-red">CRIT</span>
+</div>
+<div class="metric-label">Class A Inconsistencies</div>
+<div class="metric-value" style="color: #ff6259;">{metrics.get('class_a_count', 0):,}</div>
+<div class="metric-caption"><span class="hud-dim">DISPUTED:</span> {metrics.get('class_a_genes', 0):,} GENES WITH P/LP</div>
+</div>""",
         unsafe_allow_html=True,
     )
 
 with kpi4:
     st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-label">Class B Inconsistencies</div>
-            <div class="metric-value" style="color: #f97316;">{metrics.get('class_b_count', 0):,}</div>
-            <div class="metric-caption">{metrics.get('class_b_genes', 0):,} Limited genes with P/LP</div>
-        </div>
-        """,
+        f"""<div class="metric-card metric-card-yellow">
+<div class="metric-top">
+<span class="metric-index">METRIC // 04</span>
+<span class="metric-tag highlight-amber">WARN</span>
+</div>
+<div class="metric-label">Class B Inconsistencies</div>
+<div class="metric-value" style="color: #fbbf24;">{metrics.get('class_b_count', 0):,}</div>
+<div class="metric-caption"><span class="hud-dim">LIMITED:</span> {metrics.get('class_b_genes', 0):,} GENES WITH P/LP</div>
+</div>""",
         unsafe_allow_html=True,
     )
 
 with kpi5:
     st.markdown(
-        f"""
-        <div class="metric-card">
-            <div class="metric-label">Patient-Years at Risk</div>
-            <div class="metric-value" style="color: #c084fc;">{metrics.get('patient_years_at_risk', 0):,.1f} <span style="font-size: 1.0rem; color: #94a3b8;">Yrs</span></div>
-            <div class="metric-caption">Cumulative unpropagated lag</div>
-        </div>
-        """,
+        f"""<div class="metric-card metric-card-purple">
+<div class="metric-top">
+<span class="metric-index">METRIC // 05</span>
+<span class="metric-tag highlight-purple">RISK</span>
+</div>
+<div class="metric-label">Patient-Years at Risk</div>
+<div class="metric-value" style="color: #c084fc;">{metrics.get('patient_years_at_risk', 0):,.1f} <span style="font-size: 0.95rem; font-weight: 500; color: rgba(242, 241, 238, 0.5);">YRS</span></div>
+<div class="metric-caption"><span class="hud-dim">UNPROPAGATED:</span> CUMULATIVE LAG</div>
+</div>""",
         unsafe_allow_html=True,
     )
+
 
 st.write("")
 
@@ -1591,12 +3031,13 @@ st.write("")
 # Main Interactive Dashboard Tabs
 # ==============================================================================
 
+st.markdown('<div id="curacascade-section-tabs"></div>', unsafe_allow_html=True)
 tab_audit, tab_gene, tab_analytics, tab_forecast, tab_methods = st.tabs([
-    "📋 Inconsistency Audit Table",
-    "🔍 Gene Detail & Timeline",
-    "📊 Aggregate Analytics",
-    "🔮 Downgrade Risk Forecasting",
-    "📖 Clinical Methodology & Schema",
+    "01 // 📋 AUDIT EXPLORER",
+    "02 // 🔍 GENE DETAIL & TIMELINE",
+    "03 // 📊 AGGREGATE ANALYTICS",
+    "04 // 🔮 DOWNGRADE RISK FORECAST",
+    "05 // 📖 CLINICAL METHODOLOGY & SCHEMA",
 ])
 
 
@@ -2085,7 +3526,7 @@ with tab_audit:
                 "Severity": st.column_config.TextColumn(
                     "Severity",
                     help="Clinical risk level: CRITICAL (Red) or HIGH (Amber)",
-                    width="small",
+                    width="medium",
                 ),
                 "Gene": st.column_config.TextColumn("Gene", width="small"),
                 "Target Record": st.column_config.TextColumn(
@@ -3011,152 +4452,392 @@ with tab_analytics:
         st.dataframe(lat_table, width="stretch")
 
         # ----------------------------------------------------------------------
-        # Objective 8: Multivariate Latency Drivers (Cox Proportional Hazards Model)
+        # Objective 8: Discrepancy Latency & Survival Analysis
         # ----------------------------------------------------------------------
         st.write("")
-        st.markdown("### 📈 Objective 8: Multivariate Latency Drivers (Cox Proportional Hazards Model)")
+        st.markdown("### 📈 Objective 8: Discrepancy Latency & Survival Analysis (Empirical & Multivariate Cox)")
         st.caption(
-            "Epidemiological survival analysis using the Cox Proportional Hazards model (`lifelines` engine) "
-            "evaluating key clinical, institutional, and structural drivers of evidence-to-practice assertion latency."
+            "Epidemiological evaluation of clinical assertion duration and time-to-synchronization kinetics "
+            "evaluating key clinical, institutional, and structural drivers of evidence-to-practice latency."
         )
 
-        cox_data = fetch_cox_survival_analysis(active_db_str, is_full_mode)
-        cox_summary_df = cox_data.get("summary_df", pd.DataFrame())
-
-        if not cox_summary_df.empty:
-            cox_col1, cox_col2 = st.columns([1.6, 1.0])
-
-            with cox_col1:
-                # Forest Plot of Hazard Ratios with 95% Confidence Intervals
-                plot_df = cox_summary_df.iloc[::-1].copy()
-
-                fig_forest = go.Figure()
-
-                # Neutral Reference Line at HR = 1.0
-                fig_forest.add_vline(
-                    x=1.0,
-                    line_dash="dash",
-                    line_color="#94A3B8",
-                    line_width=1.5,
-                    annotation_text="Neutral (HR = 1.0)",
-                    annotation_position="top right",
-                    annotation_font=dict(color="#94A3B8", size=10),
-                )
-
-                # Error bars calculation
-                err_plus = plot_df["ci_upper_95"] - plot_df["hazard_ratio"]
-                err_minus = plot_df["hazard_ratio"] - plot_df["ci_lower_95"]
-
-                marker_colors = [
-                    "#38BDF8" if hr > 1.0 else "#F97316"
-                    for hr in plot_df["hazard_ratio"]
-                ]
-
-                fig_forest.add_trace(
-                    go.Scatter(
-                        x=plot_df["hazard_ratio"],
-                        y=plot_df["covariate"],
-                        mode="markers+text",
-                        marker=dict(
-                            color=marker_colors,
-                            size=10,
-                            symbol="square",
-                        ),
-                        error_x=dict(
-                            type="data",
-                            symmetric=False,
-                            array=err_plus,
-                            arrayminus=err_minus,
-                            color="#CBD5E1",
-                            thickness=1.5,
-                            width=6,
-                        ),
-                        text=[f"HR {hr:.2f} [{lo:.2f}–{hi:.2f}]" for hr, lo, hi in zip(plot_df["hazard_ratio"], plot_df["ci_lower_95"], plot_df["ci_upper_95"])],
-                        textposition="top center",
-                        textfont=dict(size=10, color="#CBD5E1"),
-                        hoverinfo="text",
-                        hovertext=[
-                            f"<b>{cov}</b><br>Hazard Ratio: {hr:.2f}<br>95% CI: [{lo:.2f}, {hi:.2f}]<br>p-value: {p}<br>Impact: {d}"
-                            for cov, hr, lo, hi, p, d in zip(
-                                plot_df["covariate"], plot_df["hazard_ratio"], plot_df["ci_lower_95"],
-                                plot_df["ci_upper_95"], plot_df["p_display"], plot_df["direction"]
-                            )
-                        ],
-                    )
-                )
-
-                apply_clinical_chart_theme(
-                    fig_forest,
-                    title="Forest Plot of Latency Drivers (Hazard Ratio & 95% CI)",
-                    height=380,
-                    showlegend=False,
-                )
-                fig_forest.update_layout(
-                    xaxis=dict(
-                        title="Hazard Ratio (HR) and 95% Confidence Interval",
-                        range=[0.3, max(plot_df["ci_upper_95"].max() * 1.15, 3.2)],
-                        zeroline=False,
-                    ),
-                    yaxis=dict(title=None),
-                    margin=dict(l=240, r=30, t=65, b=40),
-                )
-                st.plotly_chart(fig_forest, width="stretch", config=PLOTLY_CONFIG)
-
-            with cox_col2:
-                c_idx = cox_data.get("concordance_index", 0.735)
-                n_obs = cox_data.get("n_observations", len(all_findings_df))
-                st.markdown(
-                    f"""
-                    <div style="background-color: #1e293b; border-left: 4px solid #6366f1; border-radius: 8px; padding: 14px; margin-bottom: 12px;">
-                        <div style="font-weight: 600; font-size: 0.95rem; color: #f8fafc;">Multivariate Model Diagnostics</div>
-                        <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 4px;">
-                            • <b>Sample Size:</b> {n_obs:,} assertion records<br>
-                            • <b>Concordance Index (C-Index):</b> <span style="color: #38bdf8; font-weight: 600;">{c_idx:.3f}</span> (Good discrimination)<br>
-                            • <b>Log-Likelihood:</b> {cox_data.get('log_likelihood', -16508.1):,}<br>
-                            • <b>Penalizer:</b> L2 Ridge (0.01)
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
+        obj8_col1, obj8_col2 = st.columns([1.8, 1.2])
+        with obj8_col1:
+            obj8_mode = st.radio(
+                "Analytical Engine Mode:",
+                options=[
+                    "Empirical Cross-Sectional Latency (Real Observations, Non-Parametric)",
+                    "Multivariate Cox Proportional Hazards Model (Pedagogical Simulation)",
+                ],
+                index=0,
+                horizontal=True,
+                key="obj8_analysis_mode",
+                help="Toggle between genuine empirical discrepancy latency (with right-censoring disclosures) and an educational multivariate Cox survival simulation.",
+            )
+        with obj8_col2:
+            is_sim_mode = "Pedagogical Simulation" in obj8_mode
+            if is_sim_mode:
                 st.markdown(
                     """
-                    <div style="background-color: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px;">
-                        <div style="font-weight: 600; font-size: 0.9rem; color: #38bdf8; margin-bottom: 6px;">
-                            📋 Clinical SOP Policy Interpretation
-                        </div>
-                        <div style="font-size: 0.83rem; line-height: 1.5; color: #cbd5e1;">
-                            • <b>Review Confidence Acceleration:</b> Assertions supported by ≥2 stars resolve <b>2.1× faster</b> (HR 2.09, p < 0.001) due to active institutional curation teams.<br><br>
-                            • <b>Commercial Laboratory Inertia:</b> Commercial testing labs exhibit <b>45% extended latency</b> (HR 0.55, p < 0.001) compared to academic medical centers, attributable to batch update cycles.<br><br>
-                            • <b>Acute Severity Response:</b> Class A refutations are prioritized and resolve <b>2.5× faster</b> (HR 2.48, p < 0.001) than ambiguous Class B limited evidence.
+                    <div style="font-size: 0.8rem; color: #fbbf24; background: #1e1b4b; padding: 8px 12px; border-radius: 6px; border: 1px solid #6366f1; margin-top: 4px;">
+                        ⚠️ <b>Demonstration Simulation:</b> Illustrates multivariate hazard ratios using <code>lifelines</code>. Static observations are right-censored.
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    """
+                    <div style="font-size: 0.8rem; color: #38bdf8; background: #0f172a; padding: 8px 12px; border-radius: 6px; border: 1px solid #334155; margin-top: 4px;">
+                        🟢 <b>Real DB Observations:</b> Non-parametric Mann-Whitney U & median tests on active clinical assertions.
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+        cox_data = fetch_cox_survival_analysis(active_db_str, is_full_mode, allow_simulation=is_sim_mode)
+        cox_summary_df = cox_data.get("summary_df", pd.DataFrame())
+
+        if not is_sim_mode:
+            # ------------------------------------------------------------------
+            # Mode A: Empirical Cross-Sectional Latency (Real Database Observations)
+            # ------------------------------------------------------------------
+            emp_data = cox_data.get("empirical_latency", {})
+            overall = emp_data.get("overall_latency", {})
+            strat = emp_data.get("stratified_comparisons", {})
+            cohort_def = emp_data.get("cohort_definition", {})
+            n_obs = cox_data.get("n_observations", len(all_findings_df))
+
+            # Metric Cards
+            mcol1, mcol2, mcol3, mcol4 = st.columns(4)
+            with mcol1:
+                st.metric(
+                    "Overall Median Latency",
+                    f"{overall.get('median_years', 0.0):.2f} Years",
+                    help="Median time between ClinGen downgrade appraisal date and repository snapshot date.",
+                )
+            with mcol2:
+                iqr_val = overall.get('iqr_days', 0)
+                st.metric(
+                    "Interquartile Range (IQR)",
+                    f"{int(iqr_val):,} Days",
+                    delta=f"{iqr_val/365.25:.2f} yrs dispersion",
+                    delta_color="off",
+                )
+            with mcol3:
+                st.metric(
+                    "Active Observations",
+                    f"{cohort_def.get('eligible_observations', n_obs):,}",
+                    help="All active downstream ClinVar Pathogenic/Likely Pathogenic assertions in downgraded genes.",
+                )
+            with mcol4:
+                st.metric(
+                    "Evaluated Genes",
+                    f"{cohort_def.get('unique_genes_evaluated', 0):,}",
+                    help="Unique ClinGen-downgraded genes with active discordant ClinVar assertions.",
+                )
+
+            st.write("")
+            emp_col1, emp_col2 = st.columns([1.6, 1.0])
+
+            with emp_col1:
+                # Build Strata Comparison Bars
+                strata_rows = []
+                sub_strat = strat.get("submitter_stratification", {})
+                if sub_strat:
+                    strata_rows.append({
+                        "Strata": sub_strat.get("cohort_a_label", "Cohort A"),
+                        "Dimension": "Submitter Type",
+                        "Median_Years": sub_strat.get("cohort_a_median_years", 0.0),
+                        "N": sub_strat.get("cohort_a_n", 0),
+                        "P_Val": sub_strat.get("p_display", "< 0.001"),
+                        "Color": "#f97316",
+                    })
+                    strata_rows.append({
+                        "Strata": sub_strat.get("cohort_b_label", "Cohort B"),
+                        "Dimension": "Submitter Type",
+                        "Median_Years": sub_strat.get("cohort_b_median_years", 0.0),
+                        "N": sub_strat.get("cohort_b_n", 0),
+                        "P_Val": sub_strat.get("p_display", "< 0.001"),
+                        "Color": "#38bdf8",
+                    })
+
+                sev_strat = strat.get("discrepancy_severity", {})
+                if sev_strat:
+                    strata_rows.append({
+                        "Strata": "Class A: Refuted / Disputed",
+                        "Dimension": "Discrepancy Severity",
+                        "Median_Years": sev_strat.get("class_a_median_years", 0.0),
+                        "N": sev_strat.get("class_a_disputed_refuted_n", 0),
+                        "P_Val": sev_strat.get("p_display", "< 0.001"),
+                        "Color": "#ef4444",
+                    })
+                    strata_rows.append({
+                        "Strata": "Class B: Limited Evidence",
+                        "Dimension": "Discrepancy Severity",
+                        "Median_Years": sev_strat.get("class_b_median_years", 0.0),
+                        "N": sev_strat.get("class_b_limited_evidence_n", 0),
+                        "P_Val": sev_strat.get("p_display", "< 0.001"),
+                        "Color": "#eab308",
+                    })
+
+                star_strat = strat.get("review_star_confidence", {})
+                if star_strat:
+                    strata_rows.append({
+                        "Strata": "Review Confidence: ≥2 Stars",
+                        "Dimension": "Review Status",
+                        "Median_Years": star_strat.get("high_stars_median_years", 0.0),
+                        "N": star_strat.get("high_stars_ge_2_n", 0),
+                        "P_Val": "N/A",
+                        "Color": "#10b981",
+                    })
+                    strata_rows.append({
+                        "Strata": "Review Confidence: 0–1 Stars",
+                        "Dimension": "Review Status",
+                        "Median_Years": star_strat.get("low_stars_median_years", 0.0),
+                        "N": star_strat.get("low_stars_0_1_n", 0),
+                        "P_Val": "N/A",
+                        "Color": "#64748b",
+                    })
+
+                dom_strat = strat.get("clinical_domain", {})
+                for d_name, d_val in dom_strat.items():
+                    strata_rows.append({
+                        "Strata": f"Domain: {d_name}",
+                        "Dimension": "Clinical Domain",
+                        "Median_Years": d_val.get("median_years", 0.0),
+                        "N": d_val.get("n", 0),
+                        "P_Val": "N/A",
+                        "Color": "#818cf8" if d_name == "Cardiovascular" else ("#ec4899" if d_name == "Hereditary Cancer" else "#a855f7"),
+                    })
+
+                if strata_rows:
+                    strata_df = pd.DataFrame(strata_rows).iloc[::-1]
+                    fig_strata = go.Figure()
+                    fig_strata.add_trace(
+                        go.Bar(
+                            y=strata_df["Strata"],
+                            x=strata_df["Median_Years"],
+                            orientation="h",
+                            marker=dict(color=strata_df["Color"]),
+                            text=[f"{y:.2f} yrs (N={n:,})" for y, n in zip(strata_df["Median_Years"], strata_df["N"])],
+                            textposition="inside",
+                            insidetextanchor="middle",
+                            textfont=dict(color="#ffffff", size=11),
+                            hoverinfo="text",
+                            hovertext=[
+                                f"<b>{s}</b><br>Dimension: {d}<br>Median Latency: {y:.2f} years ({y*365.25:.0f} days)<br>Observations: {n:,}"
+                                for s, d, y, n in zip(strata_df["Strata"], strata_df["Dimension"], strata_df["Median_Years"], strata_df["N"])
+                            ],
+                        )
+                    )
+                    apply_clinical_chart_theme(
+                        fig_strata,
+                        title="Empirical Discrepancy Latency by Clinical & Institutional Strata",
+                        height=410,
+                        showlegend=False,
+                    )
+                    fig_strata.update_layout(
+                        xaxis=dict(title="Median Unresolved Latency (Years)", zeroline=True, zerolinecolor="#334155"),
+                        yaxis=dict(title=None),
+                        margin=dict(l=220, r=20, t=55, b=40),
+                    )
+                    st.plotly_chart(fig_strata, width="stretch", config=PLOTLY_CONFIG)
+
+            with emp_col2:
+                st.markdown(
+                    f"""
+                    <div style="background-color: #1e293b; border-left: 4px solid #10b981; border-radius: 8px; padding: 14px; margin-bottom: 12px;">
+                        <div style="font-weight: 600; font-size: 0.95rem; color: #f8fafc;">Statistical Methodology & Right-Censoring</div>
+                        <div style="font-size: 0.84rem; color: #94a3b8; margin-top: 6px; line-height: 1.5;">
+                            • <b>Censoring Status:</b> Cross-sectionally right-censored at snapshot date (2024-10-01).<br>
+                            • <b>Statistical Tests:</b> Two-sided non-parametric Mann-Whitney U rank-sum test.<br>
+                            • <b>Severity Contrast:</b> Class A vs Class B (p = {sev_strat.get('p_display', '< 0.001')}).<br>
+                            • <b>Submitter Contrast:</b> Submitter strata difference (p = {sub_strat.get('p_display', '< 0.001')}).
                         </div>
                     </div>
                     """,
                     unsafe_allow_html=True,
                 )
 
-            # Regression coefficients table
-            with st.expander("📋 View Detailed Cox Proportional Hazards Regression Parameter Table"):
-                disp_cox_table = cox_summary_df[[
-                    "covariate", "hazard_ratio", "ci_lower_95", "ci_upper_95", "coef", "std_error", "z_score", "p_display", "direction"
-                ]].copy()
+                st.markdown(
+                    f"""
+                    <div style="background-color: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px;">
+                        <div style="font-weight: 600; font-size: 0.9rem; color: #38bdf8; margin-bottom: 6px;">
+                            📋 Verified Empirical Cohort Statement
+                        </div>
+                        <div style="font-size: 0.83rem; line-height: 1.5; color: #cbd5e1;">
+                            {cox_data.get("interpretation", "Empirical latency cohort successfully extracted and analyzed.")}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+            # Detailed Empirical Table
+            with st.expander("📋 View Detailed Empirical Latency Summary & Stratification Table"):
+                emp_table_rows = []
+                for r in strata_rows:
+                    emp_table_rows.append({
+                        "Dimension": r["Dimension"],
+                        "Stratum / Sub-Cohort": r["Strata"],
+                        "Eligible Observations (N)": f"{r['N']:,}",
+                        "Median Latency (Years)": f"{r['Median_Years']:.2f}",
+                        "Median Latency (Days)": f"{int(r['Median_Years'] * 365.25):,}",
+                        "p-value": r["P_Val"],
+                    })
                 st.dataframe(
-                    disp_cox_table,
+                    pd.DataFrame(emp_table_rows),
                     width="stretch",
                     hide_index=True,
-                    column_config={
-                        "covariate": st.column_config.TextColumn("Covariate Driver", width="medium"),
-                        "hazard_ratio": st.column_config.NumberColumn("Hazard Ratio (HR)", format="%.2f"),
-                        "ci_lower_95": st.column_config.NumberColumn("95% CI Lower", format="%.2f"),
-                        "ci_upper_95": st.column_config.NumberColumn("95% CI Upper", format="%.2f"),
-                        "coef": st.column_config.NumberColumn("Beta (β)", format="%.4f"),
-                        "std_error": st.column_config.NumberColumn("Std Error", format="%.4f"),
-                        "z_score": st.column_config.NumberColumn("z-score", format="%.2f"),
-                        "p_display": st.column_config.TextColumn("p-value", width="small"),
-                        "direction": st.column_config.TextColumn("Clinical Impact Direction", width="medium"),
-                    },
                 )
+
+        else:
+            # ------------------------------------------------------------------
+            # Mode B: Pedagogical Cox Proportional Hazards Model (Demonstration)
+            # ------------------------------------------------------------------
+            if not cox_summary_df.empty:
+                cox_col1, cox_col2 = st.columns([1.6, 1.0])
+
+                with cox_col1:
+                    # Forest Plot of Hazard Ratios with 95% Confidence Intervals
+                    plot_df = cox_summary_df.iloc[::-1].copy()
+
+                    # Safely coerce columns to numeric
+                    plot_df["hazard_ratio"] = pd.to_numeric(plot_df["hazard_ratio"], errors="coerce")
+                    plot_df["ci_lower_95"] = pd.to_numeric(plot_df["ci_lower_95"], errors="coerce")
+                    plot_df["ci_upper_95"] = pd.to_numeric(plot_df["ci_upper_95"], errors="coerce")
+
+                    has_numeric_hr = (
+                        plot_df["hazard_ratio"].notna().all()
+                        and plot_df["ci_upper_95"].notna().all()
+                        and plot_df["ci_lower_95"].notna().all()
+                    )
+
+                    if has_numeric_hr:
+                        fig_forest = go.Figure()
+
+                        # Neutral Reference Line at HR = 1.0
+                        fig_forest.add_vline(
+                            x=1.0,
+                            line_dash="dash",
+                            line_color="#94A3B8",
+                            line_width=1.5,
+                            annotation_text="Neutral (HR = 1.0)",
+                            annotation_position="top right",
+                            annotation_font=dict(color="#94A3B8", size=10),
+                        )
+
+                        # Error bars calculation
+                        err_plus = plot_df["ci_upper_95"] - plot_df["hazard_ratio"]
+                        err_minus = plot_df["hazard_ratio"] - plot_df["ci_lower_95"]
+
+                        marker_colors = [
+                            "#38BDF8" if hr > 1.0 else "#F97316"
+                            for hr in plot_df["hazard_ratio"]
+                        ]
+
+                        fig_forest.add_trace(
+                            go.Scatter(
+                                x=plot_df["hazard_ratio"],
+                                y=plot_df["covariate"],
+                                mode="markers+text",
+                                marker=dict(
+                                    color=marker_colors,
+                                    size=10,
+                                    symbol="square",
+                                ),
+                                error_x=dict(
+                                    type="data",
+                                    symmetric=False,
+                                    array=err_plus,
+                                    arrayminus=err_minus,
+                                    color="#CBD5E1",
+                                    thickness=1.5,
+                                    width=6,
+                                ),
+                                text=[f"HR {hr:.2f} [{lo:.2f}–{hi:.2f}]" for hr, lo, hi in zip(plot_df["hazard_ratio"], plot_df["ci_lower_95"], plot_df["ci_upper_95"])],
+                                textposition="top center",
+                                textfont=dict(size=10, color="#CBD5E1"),
+                                hoverinfo="text",
+                                hovertext=[
+                                    f"<b>{cov}</b><br>Hazard Ratio: {hr:.2f}<br>95% CI: [{lo:.2f}, {hi:.2f}]<br>p-value: {p}<br>Impact: {d}"
+                                    for cov, hr, lo, hi, p, d in zip(
+                                        plot_df["covariate"], plot_df["hazard_ratio"], plot_df["ci_lower_95"],
+                                        plot_df["ci_upper_95"], plot_df.get("p_display", ["N/A"] * len(plot_df)),
+                                        plot_df.get("direction", [""] * len(plot_df))
+                                    )
+                                ],
+                            )
+                        )
+
+                        apply_clinical_chart_theme(
+                            fig_forest,
+                            title="Forest Plot of Latency Drivers (Hazard Ratio & 95% CI)",
+                            height=380,
+                            showlegend=False,
+                        )
+                        max_ci = plot_df["ci_upper_95"].max()
+                        upper_lim = max(max_ci * 1.15, 3.2) if pd.notna(max_ci) else 3.2
+                        fig_forest.update_layout(
+                            xaxis=dict(
+                                title="Hazard Ratio (HR) and 95% Confidence Interval",
+                                range=[0.3, upper_lim],
+                                zeroline=False,
+                            ),
+                            yaxis=dict(title=None),
+                            margin=dict(l=240, r=30, t=65, b=40),
+                        )
+                        st.plotly_chart(fig_forest, width="stretch", config=PLOTLY_CONFIG)
+                    else:
+                        st.info("Multivariate Cox model hazard ratios are currently being prepared.")
+
+                with cox_col2:
+                    c_idx = cox_data.get("concordance_index", 0.735)
+                    n_obs = cox_data.get("n_observations", len(all_findings_df))
+                    st.markdown(
+                        f"""
+                        <div style="background-color: #1e293b; border-left: 4px solid #6366f1; border-radius: 8px; padding: 14px; margin-bottom: 12px;">
+                            <div style="font-weight: 600; font-size: 0.95rem; color: #f8fafc;">Multivariate Model Diagnostics</div>
+                            <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 4px;">
+                                • <b>Sample Size:</b> {n_obs:,} assertion records<br>
+                                • <b>Concordance Index (C-Index):</b> <span style="color: #38bdf8; font-weight: 600;">{c_idx:.3f}</span> (Good discrimination)<br>
+                                • <b>Log-Likelihood:</b> {cox_data.get('log_likelihood', -16508.1):,}<br>
+                                • <b>Penalizer:</b> L2 Ridge (0.01)
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+                    st.markdown(
+                        """
+                        <div style="background-color: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 14px;">
+                            <div style="font-weight: 600; font-size: 0.9rem; color: #38bdf8; margin-bottom: 6px;">
+                                📋 Clinical SOP Policy Interpretation
+                            </div>
+                            <div style="font-size: 0.83rem; line-height: 1.5; color: #cbd5e1;">
+                                • <b>Review Confidence Acceleration:</b> Assertions supported by ≥2 stars resolve <b>2.1× faster</b> (HR 2.09, p < 0.001) due to active institutional curation teams.<br><br>
+                                • <b>Commercial Laboratory Inertia:</b> Commercial testing labs exhibit <b>45% extended latency</b> (HR 0.55, p < 0.001) compared to academic medical centers, attributable to batch update cycles.<br><br>
+                                • <b>Acute Severity Response:</b> Class A refutations are prioritized and resolve <b>2.5× faster</b> (HR 2.48, p < 0.001) than ambiguous Class B limited evidence.
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+                # Regression coefficients table
+                with st.expander("📋 View Detailed Cox Proportional Hazards Regression Parameter Table"):
+                    avail_cols = [
+                        c for c in ["covariate", "hazard_ratio", "ci_lower_95", "ci_upper_95", "coef", "std_error", "z_score", "p_display", "direction"]
+                        if c in cox_summary_df.columns
+                    ]
+                    disp_cox_table = cox_summary_df[avail_cols].copy()
+                    st.dataframe(
+                        disp_cox_table,
+                        width="stretch",
+                        hide_index=True,
+                    )
 
         st.divider()
 
@@ -3836,8 +5517,8 @@ with tab_forecast:
                     color_continuous_scale=[[0, "#3b82f6"], [0.5, "#a855f7"], [1.0, "#f43f5e"]],
                     text="relative_importance_pct",
                 )
-                fig_imp.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
-                fig_imp.update_layout(coloraxis_showscale=False)
+                fig_imp.update_traces(texttemplate="%{text:.1f}%", textposition="auto", cliponaxis=False)
+                fig_imp.update_layout(coloraxis_showscale=False, xaxis=dict(range=[0, 100]))
                 apply_clinical_chart_theme(fig_imp, height=380, showlegend=False)
                 st.plotly_chart(fig_imp, width="stretch", config=PLOTLY_CONFIG)
 

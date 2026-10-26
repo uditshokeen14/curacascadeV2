@@ -20,10 +20,9 @@ def setup_test_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     data_dir = tmp_path / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
     
-    for db_name in ("curacascade.db", "curacascade_full.db"):
-        src_db = _ROOT_DIR / "data" / db_name
-        if src_db.exists():
-            shutil.copy2(src_db, data_dir / db_name)
+    src_db = _ROOT_DIR / "data" / "curacascade.db"
+    if src_db.exists():
+        shutil.copy2(src_db, data_dir / "curacascade.db")
             
     monkeypatch.setenv("CURACASCADE_HOME", str(tmp_path))
 

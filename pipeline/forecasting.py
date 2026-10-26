@@ -31,7 +31,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.inspection import permutation_importance
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import average_precision_score, roc_auc_score, roc_curve
+from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score, roc_curve
 from sklearn.model_selection import train_test_split
 
 import config as C
@@ -200,15 +200,15 @@ def train_and_evaluate_model(df: pd.DataFrame) -> Dict[str, Any]:
     )
 
     if use_temporal:
-        split_type = f"Strict Temporal Split (Cutoff: {split_date})"
+        split_type = f"Strict Temporal Partition (Cutoff: {split_date})"
         X_train = X[temporal_train_mask]
         X_test = X[temporal_test_mask]
         y_train = y_temp_train
         y_test = y_temp_test
         test_df = df[temporal_test_mask].copy()
     else:
-        # Fallback to Stratified 70/30 split if temporal partition lacks class balance
-        split_type = "Stratified 70/30 Split (Temporal Fallback)"
+        # Documented Stratified 70/30 Cross-Sectional Split
+        split_type = "Cross-Sectional Stratified 70/30 Split (Temporal Partition Infeasible - Pre-Appraisal Time-Series Unobserved)"
         X_train, X_test, y_train, y_test, _, test_df = train_test_split(
             X,
             y,
@@ -245,6 +245,12 @@ def train_and_evaluate_model(df: pd.DataFrame) -> Dict[str, Any]:
         rf_prauc = float(average_precision_score(y_test, rf_test_probs))
     except Exception:
         lr_prauc, rf_prauc = 0.50, 0.50
+
+    try:
+        lr_brier = float(brier_score_loss(y_test, lr_test_probs))
+        rf_brier = float(brier_score_loss(y_test, rf_test_probs))
+    except Exception:
+        lr_brier, rf_brier = 0.25, 0.25
 
     # Precision@Top-20% evaluation
     k = max(1, int(round(0.20 * len(y_test))))
@@ -301,61 +307,37 @@ def train_and_evaluate_model(df: pd.DataFrame) -> Dict[str, Any]:
         supported_X = supported_df[FEATURE_COLS]
         supported_probs = final_model.predict_proba(supported_X)[:, 1]
 
-        # Calibrate probabilities for clinical risk triage (Whiffin et al., Strande et al.)
-        def _calibrate_prob(p: float, row: pd.Series) -> float:
-            score = float(p)
-            # Boost for explicit population-genetics violations (gnomAD AF > MCAF)
-            if row.get("mcaf_violation_rate", 0.0) >= 0.50:
-                score = max(score, 0.40) + 0.35
-            elif row.get("mcaf_violation_rate", 0.0) > 0.0:
-                score = max(score, 0.25) + 0.20
+        # Raw Random Forest vote fraction - explicitly designated as uncalibrated risk score
+        supported_df["downgrade_risk_score"] = np.round(supported_probs, 4)
 
-            # Boost for poor assertion quality (<2 stars)
-            if row.get("low_star_ratio", 0.0) >= 0.75:
-                score += 0.25
-            elif row.get("low_star_ratio", 0.0) >= 0.40:
-                score += 0.15
+        # Transparent rule-based risk indicator flags (decoupled from probability)
+        supported_df["flag_mcaf_violation"] = (supported_df["mcaf_violation_rate"] > 0).astype(int)
+        supported_df["flag_low_stars"] = (supported_df["low_star_ratio"] >= 0.50).astype(int)
+        supported_df["flag_panel_conflict"] = (supported_df["panel_amber_red_count"] >= 1).astype(int)
+        supported_df["flag_stale_curation"] = (supported_df["curation_age_days"] >= 1825).astype(int)
 
-            # Boost for panel disagreements (Genomics England amber/red)
-            if row.get("panel_amber_red_count", 0) >= 1:
-                score += 0.15
-
-            # Floor/ceiling adjustments for consensus concordant definitive genes
-            if (row.get("mcaf_violation_rate", 0.0) == 0.0 and 
-                row.get("low_star_ratio", 0.0) == 0.0 and 
-                row.get("panel_amber_red_count", 0) == 0):
-                score = min(score, 0.12)
-
-            return float(np.clip(score, 0.005, 0.95))
-
-        calibrated_scores = [
-            _calibrate_prob(p, row)
-            for p, (_, row) in zip(supported_probs, supported_df.iterrows())
-        ]
-        supported_df["downgrade_risk_score"] = np.round(calibrated_scores, 3)
-
-        # Categorize into Risk Tiers
+        # Categorize into Risk Tiers based on uncalibrated risk score
         def _assign_tier(p: float) -> str:
-            if p >= 0.65:
+            if p >= 0.50:
                 return "High Risk"
-            elif p >= 0.35:
+            elif p >= 0.25:
                 return "Moderate Watch"
             else:
                 return "Stable"
 
         supported_df["risk_tier"] = supported_df["downgrade_risk_score"].apply(_assign_tier)
 
-        # Assign top risk driver based on feature contributions
+        # Assign top risk driver based on objective feature contributions
         def _get_top_driver(r: pd.Series) -> str:
-            if r["mcaf_violation_rate"] >= 0.15:
+            if r["mcaf_violation_rate"] > 0:
                 return "Elevated gnomAD MCAF Violation Rate"
-            elif r["low_star_ratio"] >= 0.40:
+            elif r["low_star_ratio"] >= 0.50:
                 return "High Proportion of Low-Star Assertions (<2 Stars)"
-            elif r["gnomad_max_af"] >= 0.001:
-                return "Elevated Population Allele Frequency in gnomAD"
             elif r["panel_amber_red_count"] >= 1:
                 return "Diagnostic Panel Confidence Conflicts (Amber/Red)"
-            elif r["curation_age_days"] >= 1800:
+            elif r["gnomad_max_af"] >= 0.001:
+                return "Elevated Population Allele Frequency in gnomAD"
+            elif r["curation_age_days"] >= 1825:
                 return "Extended Curation Latency (>5 Years Unreviewed)"
             elif r["pathogenic_lp_count"] >= 5 and r["low_star_ratio"] >= 0.25:
                 return "Discordant ClinVar Assertion Volume"
@@ -368,6 +350,13 @@ def train_and_evaluate_model(df: pd.DataFrame) -> Dict[str, Any]:
         supported_df = pd.DataFrame()
 
     return {
+        "model_status": "EXPLORATORY_RETROSPECTIVE_EVALUATION",
+        "temporal_leakage_warning": (
+            "Features were aggregated from static cross-sectional database snapshots (2024/2026) "
+            "rather than pre-downgrade historical ClinVar archives. Results demonstrate retrospective discriminatory capacity "
+            "but cannot be claimed as validated prospective forecasting."
+        ),
+        "score_calibration_status": "UNCALIBRATED_RISK_SCORES (Random Forest vote fractions with class_weight='balanced')",
         "split_type": split_type,
         "train_size": len(X_train),
         "test_size": len(X_test),
@@ -375,6 +364,8 @@ def train_and_evaluate_model(df: pd.DataFrame) -> Dict[str, Any]:
         "rf_auroc": round(rf_auroc, 3),
         "lr_prauc": round(lr_prauc, 3),
         "rf_prauc": round(rf_prauc, 3),
+        "lr_brier_score": round(lr_brier, 4),
+        "rf_brier_score": round(rf_brier, 4),
         "precision_top_20": round(precision_top_20, 3),
         "roc_data": {
             "fpr_lr": fpr_lr.tolist(),
@@ -540,10 +531,13 @@ def main():
         print("Forecasting pipeline failed or insufficient data.")
         sys.exit(1)
 
-    print(f"\nValidation Strategy: {results['split_type']}")
+    print(f"\nModel Status: {results.get('model_status', 'EXPLORATORY_RETROSPECTIVE_EVALUATION')}")
+    print("Methodology Advisory: Features reflect cross-sectional warehouse snapshots; prospective predictive claims require longitudinal point-in-time feature reconstruction.")
+    print(f"Validation Strategy: {results['split_type']}")
     print(f"Train samples: {results['train_size']} | Test samples: {results['test_size']}")
-    print(f"Logistic Regression AUROC: {results['lr_auroc']:.3f} | PR-AUC: {results['lr_prauc']:.3f}")
-    print(f"Random Forest AUROC:       {results['rf_auroc']:.3f} | PR-AUC: {results['rf_prauc']:.3f}")
+    print(f"Logistic Regression AUROC: {results['lr_auroc']:.3f} | PR-AUC: {results['lr_prauc']:.3f} | Brier: {results.get('lr_brier_score', 0.0):.4f}")
+    print(f"Random Forest AUROC:       {results['rf_auroc']:.3f} | PR-AUC: {results['rf_prauc']:.3f} | Brier: {results.get('rf_brier_score', 0.0):.4f}")
+    print(f"Random Forest Score Calibration: {results.get('score_calibration_status', 'UNCALIBRATED_RISK_SCORE')}")
     print(f"Precision@Top-20%:         {results['precision_top_20'] * 100:.1f}%")
 
     print("\nTop Risk Feature Drivers:")
@@ -551,10 +545,10 @@ def main():
         print(f"  - {row['feature_label']:<38}: {row['relative_importance_pct']:>5.1f}% relative importance")
 
     preds_df = results["supported_predictions_df"]
-    print(f"\nMaterialized {len(preds_df)} supported gene predictions:")
+    print(f"\nMaterialized {len(preds_df)} supported gene predictions (Uncalibrated Risk Priority Scores):")
     if not preds_df.empty:
         for _, row in preds_df.iterrows():
-            print(f"  [{row['risk_tier']:<14}] {row['gene_symbol']:<8} (Risk: {row['downgrade_risk_score']*100:>5.1f}%) | Driver: {row['top_risk_driver']}")
+            print(f"  [{row['risk_tier']:<14}] {row['gene_symbol']:<8} (Risk Index: {row['downgrade_risk_score']*100:>5.1f}%) | Driver: {row['top_risk_driver']}")
 
     print("\nForecasting pipeline executed successfully!")
 

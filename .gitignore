@@ -31,3 +31,5 @@ data/*.db-wal
 
 !data/curacascade.db
 !data/curacascade_full.db
+
+scratch/

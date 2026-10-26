@@ -42,6 +42,8 @@ if hasattr(sys.stderr, "reconfigure"):
 import config as C
 
 
+from database.schema import migrate_schema
+
 # ==============================================================================
 # Audit Field Definitions
 # ==============================================================================
@@ -68,6 +70,12 @@ AUDIT_ALL_FIELDS: List[str] = [
     "gnomad_af",
     "mcaf_threshold",
     "population_refuted_flag",
+    "curation_id",
+    "match_status",
+    "match_rationale",
+    "rule_id",
+    "target_phenotype",
+    "disease_match_confidence",
     "created_at",
 ]
 
@@ -108,7 +116,15 @@ def query_audit_records(
                 "Table 'audit_findings' does not exist in the database. Please seed data first."
             )
 
-        fields_sql = ", ".join(AUDIT_ALL_FIELDS)
+        try:
+            migrate_schema(conn)
+        except Exception:
+            pass
+
+        cursor.execute("PRAGMA table_info(audit_findings);")
+        existing_cols = {r[1] for r in cursor.fetchall()}
+        fields_to_select = [col for col in AUDIT_ALL_FIELDS if col in existing_cols]
+        fields_sql = ", ".join(fields_to_select)
         query = f"SELECT {fields_sql} FROM audit_findings"
         conditions: List[str] = []
         params: List[Any] = []

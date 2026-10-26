@@ -12,6 +12,7 @@ B-tree indexing in < 2 minutes.
 from __future__ import annotations
 
 import datetime
+import hashlib
 from pathlib import Path
 import sqlite3
 import sys
@@ -22,6 +23,17 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 import time
 from typing import Any, Dict, Optional, Union
+
+
+def compute_sha256(path: Path) -> str:
+    """Compute SHA-256 checksum for a file."""
+    if not path.exists():
+        return ""
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while chunk := f.read(65536):
+            h.update(chunk)
+    return h.hexdigest()
 
 # Ensure repository root is on sys.path
 _REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -34,6 +46,7 @@ from pipeline.allele_frequency import (
     GNOMAD_VARIANT_CATALOG,
     enrich_database_population_genetics,
 )
+from pipeline.audit import run_audit
 
 INTERIM_DIR = _REPO_ROOT / "curacascade" / "data" / "interim"
 OUT_DIR = _REPO_ROOT / "curacascade" / "data" / "out"
@@ -143,7 +156,8 @@ def build_full_warehouse(
             classification      TEXT NOT NULL,
             classification_date TEXT,
             gcep                TEXT,
-            report_url          TEXT
+            report_url          TEXT,
+            UNIQUE (gene_symbol, disease_id, moi, classification_date)
         );
 
         CREATE TABLE clinvar_variants (
@@ -164,12 +178,14 @@ def build_full_warehouse(
         CREATE TABLE panelapp_entries (
             entry_id            INTEGER PRIMARY KEY AUTOINCREMENT,
             gene_symbol         TEXT NOT NULL REFERENCES genes(gene_symbol),
+            disease_id          TEXT REFERENCES diseases(disease_id),
             panel_id            INTEGER,
             panel_name          TEXT,
             panel_version       TEXT,
             confidence          TEXT,
             mode_of_inheritance TEXT,
-            phenotypes          TEXT
+            phenotypes          TEXT,
+            UNIQUE (gene_symbol, panel_id)
         );
 
         CREATE TABLE audit_findings (
@@ -194,7 +210,37 @@ def build_full_warehouse(
             gnomad_af                REAL DEFAULT 0.0,
             mcaf_threshold           REAL DEFAULT 0.0,
             population_refuted_flag  INTEGER DEFAULT 0,
+            curation_id              INTEGER,
+            match_status             TEXT NOT NULL DEFAULT 'CONFIRMED_MATCH',
+            match_rationale          TEXT,
+            rule_id                  TEXT,
+            target_phenotype         TEXT,
+            disease_match_confidence TEXT DEFAULT 'HIGH',
             created_at               TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS disease_mappings (
+            mapping_id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            source_system       TEXT NOT NULL,
+            source_concept_id   TEXT,
+            source_concept_name TEXT NOT NULL,
+            target_disease_id   TEXT NOT NULL,
+            mapping_method      TEXT NOT NULL,
+            confidence          TEXT NOT NULL,
+            mapping_version     TEXT DEFAULT '1.0',
+            created_at          TEXT DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS provenance (
+            provenance_id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            source_name            TEXT NOT NULL,
+            source_url             TEXT,
+            snapshot_date          TEXT,
+            retrieval_timestamp    TEXT DEFAULT (datetime('now')),
+            sha256_checksum        TEXT,
+            record_count           INTEGER,
+            transformation_version TEXT,
+            details                TEXT
         );
         """
     )
@@ -337,157 +383,17 @@ def build_full_warehouse(
                 print(f"   [Note] Showcase PanelApp merge skipped: {e}")
 
     # 5. Cross-Layer Inconsistency Audit Materialization
-    print("   [5/6] Executing cross-layer relational join to materialize Audit Findings (Classes A, B, C)...")
-    today = datetime.date.today()
+    print("   [5/6] Executing disease-aware cross-layer relational audit...")
+    conn.commit()
+    conn.close()
 
-    # Precompute earliest downgrade per gene
-    downgrade_info = {}
-    for _, r in cg[cg["classification"].isin(DOWNGRADED_CLASSIFICATIONS)].iterrows():
-        sym = r["gene"]
-        c_date = r["classification_date"]
-        c_class = r["classification"]
-        c_gcep = r.get("gcep") or "ClinGen GCEP"
-        c_url = r.get("report_url") or ""
-        c_dis = r.get("disease") or "Genetic Disease"
-        c_mid = r.get("mondo_id") or ""
+    # Delegate to the disease-aware audit engine
+    audit_results = run_audit(db_path=db_path, export_csv=False)
+    findings_count = len(audit_results["findings_df"])
+    print(f"         Materialized {findings_count:,} disease-aware audit inconsistency findings.")
 
-        if sym not in downgrade_info:
-            downgrade_info[sym] = {
-                "date": c_date,
-                "class": c_class,
-                "gcep": c_gcep,
-                "url": c_url,
-                "disease": c_dis,
-                "mondo_id": c_mid,
-            }
-        else:
-            # Prioritize Refuted/Disputed over Limited
-            if c_class in SEVERITY_CLASS_A and downgrade_info[sym]["class"] not in SEVERITY_CLASS_A:
-                downgrade_info[sym] = {
-                    "date": c_date or downgrade_info[sym]["date"],
-                    "class": c_class,
-                    "gcep": c_gcep,
-                    "url": c_url,
-                    "disease": c_dis,
-                    "mondo_id": c_mid,
-                }
-
-    findings = []
-    # Class A & B: Variants in downgraded genes
-    plp_variants_df = pd.read_sql_query("SELECT * FROM clinvar_variants WHERE is_plp = 1", conn)
-    if not plp_variants_df.empty:
-        for _, vrow in plp_variants_df.iterrows():
-            sym = vrow["gene_symbol"]
-            if sym in downgrade_info:
-                d_info = downgrade_info[sym]
-                is_class_a = d_info["class"] in SEVERITY_CLASS_A
-                audit_cls = "Class A" if is_class_a else "Class B"
-                sev = "CRITICAL" if is_class_a else "WARNING"
-
-                dt_diff = 0
-                if d_info["date"]:
-                    try:
-                        d_obj = datetime.datetime.strptime(str(d_info["date"])[:10], "%Y-%m-%d").date()
-                        dt_diff = max(0, (today - d_obj).days)
-                    except Exception:
-                        dt_diff = 365
-
-                v_id = str(vrow["variation_id"])
-                v_name = vrow["variant_name"]
-                stars_val = vrow.get("stars", 0)
-                n_sub = vrow.get("num_submitters", 1)
-                t_stat = f"{vrow['clinical_significance']} ({stars_val} stars)"
-
-                # Check population frequency
-                cat_entry = GNOMAD_VARIANT_CATALOG.get(int(vrow["variation_id"]))
-                af_val = cat_entry["af_global"] if cat_entry else 0.0
-                mcaf_val = 0.0001
-                pop_refuted = 1 if (cat_entry and af_val > mcaf_val) else 0
-
-                evid = (
-                    f"ClinGen GCEP ({d_info['gcep']}) classified gene '{sym}' as '{d_info['class']}' on {d_info['date']}. "
-                    f"Downstream ClinVar database continues to report this variant as {vrow['clinical_significance']} "
-                    f"with {stars_val} stars."
-                )
-
-                findings.append({
-                    "audit_class": audit_cls,
-                    "severity": sev,
-                    "gene_symbol": sym,
-                    "disease_id": d_info["mondo_id"] or d_info["disease"],
-                    "disease_name": d_info["disease"],
-                    "clingen_classification": d_info["class"],
-                    "clingen_date": d_info["date"],
-                    "clingen_gcep": d_info["gcep"],
-                    "clingen_report_url": d_info["url"],
-                    "target_type": "ClinVar Variant",
-                    "target_id": v_id,
-                    "target_name": v_name,
-                    "target_status": t_stat,
-                    "evidence_summary": evid,
-                    "submitters_or_panel_info": f"{n_sub} submitter(s)",
-                    "last_evaluated_date": vrow.get("last_evaluated"),
-                    "days_unresolved": dt_diff,
-                    "gnomad_af": af_val,
-                    "mcaf_threshold": mcaf_val,
-                    "population_refuted_flag": pop_refuted,
-                })
-
-    # Class C: PanelApp Green in Disputed/Refuted genes
-    green_panels_df = pd.read_sql_query("SELECT * FROM panelapp_entries WHERE LOWER(confidence) = 'green'", conn)
-    if not green_panels_df.empty:
-        for _, prow in green_panels_df.iterrows():
-            sym = prow["gene_symbol"]
-            if sym in downgrade_info:
-                d_info = downgrade_info[sym]
-                is_class_c = d_info["class"] in SEVERITY_CLASS_A
-                audit_cls = "Class C" if is_class_c else "Class B"
-                sev = "CRITICAL" if is_class_c else "WARNING"
-
-                dt_diff = 0
-                if d_info["date"]:
-                    try:
-                        d_obj = datetime.datetime.strptime(str(d_info["date"])[:10], "%Y-%m-%d").date()
-                        dt_diff = max(0, (today - d_obj).days)
-                    except Exception:
-                        dt_diff = 365
-
-                p_id = str(prow.get("panel_id") or "PanelApp")
-                p_name = prow.get("panel_name") or f"Panel {p_id}"
-                p_stat = "Green (Diagnostic-Grade)"
-
-                evid = (
-                    f"ClinGen GCEP ({d_info['gcep']}) refuted/disputed gene validity as '{d_info['class']}'. "
-                    f"However, Genomics England PanelApp still lists '{sym}' as diagnostic-grade Green in {p_name}."
-                )
-
-                findings.append({
-                    "audit_class": audit_cls,
-                    "severity": sev,
-                    "gene_symbol": sym,
-                    "disease_id": d_info["mondo_id"] or d_info["disease"],
-                    "disease_name": d_info["disease"],
-                    "clingen_classification": d_info["class"],
-                    "clingen_date": d_info["date"],
-                    "clingen_gcep": d_info["gcep"],
-                    "clingen_report_url": d_info["url"],
-                    "target_type": "PanelApp Panel",
-                    "target_id": p_id,
-                    "target_name": p_name,
-                    "target_status": p_stat,
-                    "evidence_summary": evid,
-                    "submitters_or_panel_info": f"Panel version {prow.get('panel_version', '1.0')}",
-                    "last_evaluated_date": d_info["date"],
-                    "days_unresolved": dt_diff,
-                    "gnomad_af": 0.0,
-                    "mcaf_threshold": 0.0001,
-                    "population_refuted_flag": 0,
-                })
-
-    if findings:
-        findings_df = pd.DataFrame(findings)
-        findings_df.to_sql("audit_findings", conn, if_exists="append", index=False)
-        print(f"         Materialized {len(findings_df):,} audit inconsistency findings across Classes A, B, and C.")
+    # Reopen connection for step 6 (views and indexes)
+    conn = sqlite3.connect(str(db_path))
 
     # 6. Legacy Views & B-Tree Indexing
     print("   [6/6] Creating compatibility views and B-tree performance indexes...")
@@ -553,7 +459,28 @@ def build_full_warehouse(
         CREATE INDEX IF NOT EXISTS idx_full_find_gene ON audit_findings(gene_symbol);
         CREATE INDEX IF NOT EXISTS idx_full_find_class ON audit_findings(audit_class);
         CREATE INDEX IF NOT EXISTS idx_full_find_gene_dis ON audit_findings(gene_symbol, disease_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_clingen_curation ON clingen_curations(gene_symbol, disease_id, moi, classification_date);
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_panelapp_entry ON panelapp_entries(gene_symbol, panel_id);
         """
+    )
+
+    # Populate provenance audit records
+    cg_hash = compute_sha256(cg_path)
+    cv_hash = compute_sha256(cv_path)
+    pa_hash = compute_sha256(pa_path)
+    
+    prov_records = [
+        ("ClinGen", "https://search.clinicalgenome.org/kb/gene-validity", "2024-10-01", cg_hash, len(cg), "2.0", "ClinGen gene-disease clinical validity expert panel appraisals"),
+        ("NCBI ClinVar", "https://ftp.ncbi.nlm.nih.gov/pub/clinvar/", "2024-10-01", cv_hash, len(cv), "2.0", "ClinVar clinical variant interpretation archive"),
+        ("Genomics England PanelApp", "https://panelapp.genomicsengland.co.uk/", "2024-10-01", pa_hash, len(pa), "2.0", "Genomics England diagnostic exome gene panel memberships"),
+    ]
+    conn.executemany(
+        """
+        INSERT INTO provenance (
+            source_name, source_url, snapshot_date, retrieval_timestamp, sha256_checksum, record_count, transformation_version, details
+        ) VALUES (?, ?, ?, datetime('now'), ?, ?, ?, ?);
+        """,
+        prov_records,
     )
 
     conn.commit()

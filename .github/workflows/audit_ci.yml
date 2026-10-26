@@ -30,7 +30,15 @@ jobs:
 
     - name: Run test suite
       run: |
-        pytest test_cli.py test_dossier.py -v
+        pytest -v
+
+    - name: Run independent validation benchmark
+      run: |
+        python -m pipeline.validation_benchmark
+
+    - name: Run empirical survival analysis
+      run: |
+        python -m pipeline.survival_analysis
 
     - name: Generate audit report artifact
       run: |
