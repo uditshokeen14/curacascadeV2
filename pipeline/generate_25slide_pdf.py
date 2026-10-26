@@ -1,0 +1,1022 @@
+"""CuraCascade V2 — 25-Slide Master Presentation PDF Generator.
+
+Uses Headless Google Chrome or Microsoft Edge to generate a pixel-perfect,
+high-DPI 16:9 widescreen static vector PDF containing all 25 defense slides.
+"""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+import subprocess
+import sys
+import pypdf
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+FIG_DIR = REPO_ROOT / "docs" / "figures"
+SCREENSHOT_DIR = FIG_DIR / "screenshots"
+
+HTML_OUT = REPO_ROOT / "docs" / "CuraCascade_Presentation_V2_25Slides.html"
+PDF_OUT = REPO_ROOT / "CuraCascade_Presentation_V2_25Slides.pdf"
+DOCS_PDF = REPO_ROOT / "docs" / "CuraCascade_Presentation_V2_25Slides.pdf"
+REDESIGNED_PDF = REPO_ROOT / "CuraCascade_Presentation_Redesigned.pdf"
+DOCS_REDESIGNED = REPO_ROOT / "docs" / "CuraCascade_Presentation_Redesigned.pdf"
+
+CHROME_EXE = Path("C:/Program Files/Google/Chrome/Application/chrome.exe")
+if not CHROME_EXE.exists():
+    CHROME_EXE = Path("C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe")
+
+
+def get_image_uri(name: str) -> str:
+    p = SCREENSHOT_DIR / name
+    if p.exists():
+        return p.as_uri()
+    p_fig = FIG_DIR / name
+    if p_fig.exists():
+        return p_fig.as_uri()
+    return ""
+
+
+def build_25slide_html() -> str:
+    s1 = get_image_uri("cropped_s1_dashboard_hero.png")
+    s2 = get_image_uri("cropped_s2_audit_table_full.png")
+    s3 = get_image_uri("cropped_s3_custom_gene_evaluator.png")
+    s4 = get_image_uri("cropped_s4_gene_detail_actn2.png")
+    s6 = get_image_uri("cropped_s6_latency_cdf_curve.png")
+    s11 = get_image_uri("cropped_s11_forecast_roc_features.png")
+    s15 = get_image_uri("cropped_s15_schema_relational_3nf.png")
+    s17 = get_image_uri("cropped_s17_prescriptive_remediation_table.png")
+    s18 = get_image_uri("cropped_s18_validation_benchmark_results.png")
+    s20 = get_image_uri("cropped_s20_full_corpus_hero.png")
+    s21 = get_image_uri("cropped_s21_full_corpus_audit_explorer.png")
+    s24 = get_image_uri("cropped_s24_full_corpus_discrepancy_strata.png")
+    arch = get_image_uri("figure_schema_architecture.png")
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CuraCascade V2 — 25-Slide Academic Defense Presentation</title>
+<style>
+  @page {{
+    size: 13.333in 7.5in;
+    margin: 0;
+  }}
+  * {{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }}
+  body {{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #071426;
+    color: #F1F5F9;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }}
+  .slide {{
+    width: 13.333in;
+    height: 7.5in;
+    page-break-after: always;
+    position: relative;
+    padding: 0.45in 0.8in 0.55in 0.8in;
+    background: #071426;
+    overflow: hidden;
+  }}
+  .top-accent-bar {{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 13.333in;
+    height: 6px;
+    background: #36D6C5;
+  }}
+  .header-category {{
+    font-size: 10pt;
+    font-weight: 700;
+    color: #36D6C5;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }}
+  .header-title {{
+    font-size: 20pt;
+    font-weight: 800;
+    color: #FFFFFF;
+    line-height: 1.2;
+    margin-bottom: 3px;
+  }}
+  .header-subtitle {{
+    font-size: 11pt;
+    color: #94A3B8;
+    margin-bottom: 20px;
+  }}
+  .card {{
+    background: #0D1F38;
+    border: 1.2px solid #1A365D;
+    border-radius: 8px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }}
+  .card-top-accent {{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+  }}
+  .card-title {{
+    font-size: 12pt;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 8px;
+  }}
+  .card-text {{
+    font-size: 9.5pt;
+    line-height: 1.5;
+    color: #94A3B8;
+  }}
+  .grid-2 {{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }}
+  .grid-3 {{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+  }}
+  .grid-4 {{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+  }}
+  .grid-5 {{
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+  }}
+  .footer {{
+    position: absolute;
+    bottom: 0.25in;
+    left: 0.8in;
+    right: 0.8in;
+    border-top: 1px solid #1A365D;
+    padding-top: 6px;
+    font-size: 8.5pt;
+    color: #64748B;
+    display: flex;
+    justify-content: space-between;
+  }}
+  .stat-val {{
+    font-size: 26pt;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin: 4px 0;
+  }}
+  .stat-lbl {{
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }}
+  .stat-sub {{
+    font-size: 8.5pt;
+    color: #94A3B8;
+  }}
+  .screenshot-img {{
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid #1A365D;
+    display: block;
+  }}
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: TITLE -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="card" style="margin-top: 0.4in; padding: 45px 50px; border-top: 5px solid #36D6C5;">
+    <div style="font-size: 11pt; font-weight: 700; color: #36D6C5; text-transform: uppercase; letter-spacing: 1px;">Academic Defense & Technical Evaluation</div>
+    <h1 style="font-size: 25pt; font-weight: 800; color: #FFFFFF; margin: 12px 0 10px 0; line-height: 1.25;">
+      CuraCascade V2: Automated Discrepancy Auditing & Evidence Synchronization Across Clinical Genomics Databases
+    </h1>
+    <p style="font-size: 13pt; color: #55B9FF; line-height: 1.5; margin-bottom: 25px;">
+      A 5-stage deterministic framework closing the multi-year evidence propagation lag between authoritative ClinGen gene downgrades and downstream ClinVar variant assertions & PanelApp diagnostic panels.
+    </p>
+    <div style="border-top: 1px solid #1A365D; padding-top: 18px; display: flex; justify-content: space-between; align-items: flex-end;">
+      <div>
+        <div style="font-size: 12pt; font-weight: 700; color: #FFFFFF;">Student Author: Udit Shokeen &nbsp;|&nbsp; Register No: 23BCB0001</div>
+        <div style="font-size: 11pt; color: #94A3B8; margin-top: 4px;">School of Computer Science & Engineering &nbsp;|&nbsp; Vellore Institute of Technology (VIT), Vellore, India</div>
+      </div>
+      <div style="text-align: right; font-size: 10pt; font-weight: 700; color: #10B981;">
+        <div>Live Portal: curacascadev2.streamlit.app</div>
+        <div style="color: #94A3B8; font-weight: 400; margin-top: 2px;">Repository: github.com/uditshokeen14/curacascadeV2</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense &nbsp;|&nbsp; VIT School of Computer Science & Engineering</span><span>Slide 01 of 25</span></div>
+</div>
+
+<!-- SLIDE 2: EXECUTIVE SUMMARY -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">01 // EXECUTIVE SUMMARY</div>
+  <div class="header-title">Executive Summary: Problem, Solution & Verified Outcomes</div>
+  <div class="header-subtitle">A high-level synthesis of the clinical challenge, software solution, and empirical validation.</div>
+  <div class="grid-4" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #EF4444;">
+      <div class="stat-lbl" style="color: #EF4444;">THE PROBLEM</div>
+      <div class="card-title" style="margin-top: 6px;">Evidence Synchronization Disconnect</div>
+      <div class="card-text">When ClinGen downgrades a gene from causal to Disputed, Refuted, or Limited, downstream ClinVar variants and PanelApp panels do not automatically update.<br><br>Stale Pathogenic assertions persist for an overall median of 2.82 years (up to 9.9 years), risking false-positive diagnoses and unwarranted surgeries.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="stat-lbl" style="color: #36D6C5;">THE SOLUTION</div>
+      <div class="card-title" style="margin-top: 6px;">Deterministic 5-Stage Audit Pipeline</div>
+      <div class="card-text">CuraCascade ingests multi-source data, normalizes disparate disease ontologies via a 3-tier MONDO-to-MedGen crosswalk, and stores data in a 3NF SQLite warehouse + DuckDB OLAP engine.<br><br>Materializes Class A, B, and C discrepancies with actionable clinical remediation directives.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #10B981;">
+      <div class="stat-lbl" style="color: #10B981;">STRONGEST RESULT</div>
+      <div class="card-title" style="margin-top: 6px;">100.0% Precision Across 94 Benchmark Cases</div>
+      <div class="card-text">Evaluated on a 100-gene independent expert adjudication benchmark (94 evaluable cases):<br><br>• Zero False Positives (100% PPV, 95% CI: [82.4%, 100.0%]).<br>• Zero false alarms on 42 definitive controls.<br>• Scaled to Full Corpus: 51,251 findings across 3,033 genes and 51,025 variants.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #F59E0B;">
+      <div class="stat-lbl" style="color: #F59E0B;">BIGGEST LIMITATION</div>
+      <div class="card-title" style="margin-top: 6px;">34.6% Recall & Static Data Snapshots</div>
+      <div class="card-text">The benchmark recall is 34.6% (18/52 detected). This reflects an intentional clinical priority: avoiding alert fatigue via conservative disease matching.<br><br>Auditing the 34 false negatives proves that 47% were absent from the snapshot, and 41% were conservative phenotypic exclusions.</div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 02 of 25</span></div>
+</div>
+
+<!-- SLIDE 3: THE REAL-WORLD PROBLEM -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">02 // THE CLINICAL CHALLENGE</div>
+  <div class="header-title">The Evidence-to-Practice Gap in Clinical Genomics</div>
+  <div class="header-subtitle">Authoritative gene downgrades fail to propagate to diagnostic databases, risking patient harm.</div>
+  <div class="grid-3" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">1. SCIENTIFIC RE-APPRAISAL</div>
+      <div class="card-text">In early candidate-gene literature, small sample sizes and lack of population controls led researchers to falsely associate genes with severe diseases.<br><br>Today, expert consortia like ClinGen systematically re-evaluate validity, downgrading candidate genes to Disputed, Refuted, or Limited (e.g., SCN1B, MYLK2, KCNE2).</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #F59E0B;">
+      <div class="card-title">2. ASYNCHRONOUS DRIFT</div>
+      <div class="card-text">Downstream databases operate under independent governance with no automated synchronization:<br><br>• <b>NCBI ClinVar:</b> Archival repository; does not re-classify variants when upstream genes are refuted.<br>• <b>PanelApp:</b> Diagnostic gene panels lag behind published expert consensus.<br><br>Result: 51,251 unpropagated discrepancies in our warehouse snapshot.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #EF4444;">
+      <div class="card-title">3. TANGIBLE PATIENT HARM</div>
+      <div class="card-text">When diagnostic laboratories rely on stale assertions, real patients suffer severe clinical harms:<br><br>• <b>False-Positive Diagnoses:</b> Healthy individuals labeled as harboring lethal cardiac or cancer risks.<br>• <b>Invasive Surgeries:</b> Unnecessary implantable defibrillator (ICD) placements or organ resections.<br>• <b>Trauma in Families:</b> Inappropriate cascade testing of children.</div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 03 of 25</span></div>
+</div>
+
+<!-- SLIDE 4: BIOMEDICAL FOUNDATIONS I -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">03 // BIOMEDICAL FOUNDATIONS</div>
+  <div class="header-title">Biomedical Foundations I: DNA, Genes, Variants & Proteins</div>
+  <div class="header-subtitle">Understanding how genetic variation causes human disease from first principles.</div>
+  <div class="grid-4" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">DNA & Chromosomes</div>
+      <div class="card-text">• DNA is a chemical double-helix encoded by four chemical bases: A, C, G, and T.<br>• Human cells package DNA into 23 pairs of chromosomes (46 total).<br>• Think of chromosomes as large reference volumes containing recipes for life.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #55B9FF;">
+      <div class="card-title">Genes & Proteins</div>
+      <div class="card-text">• A gene is a specific sequence of DNA bases providing instructions to build a protein.<br>• Humans have ~20,000 genes.<br>• Proteins perform cellular work: building muscle (MYH7), conducting heart currents (SCN5A), or repairing DNA (BRCA1).</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #F59E0B;">
+      <div class="card-title">Genetic Variants</div>
+      <div class="card-text">• A variant is a typographical change in the DNA sequence (a typo in the recipe).<br>• <b>Benign Variants:</b> Harmless natural diversity found in healthy individuals.<br>• <b>Pathogenic Variants:</b> Damaging alterations that disrupt protein function, causing disease.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #10B981;">
+      <div class="card-title">Allele Frequency & MCAF</div>
+      <div class="card-text">• Allele Frequency (AF): Percentage of people carrying a variant in healthy reference cohorts (gnomAD).<br>• <b>Whiffin et al. Framework:</b> If a condition occurs in 1 in 10,000 people, a variant present in 1% of healthy adults CANNOT be causal.<br>• Establishes MCAF thresholds.</div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 04 of 25</span></div>
+</div>
+
+<!-- SLIDE 5: BIOMEDICAL FOUNDATIONS II -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">04 // BIOMEDICAL FOUNDATIONS</div>
+  <div class="header-title">Biomedical Foundations II: Gene Validity vs. Variant Pathogenicity</div>
+  <div class="header-subtitle">Crucial distinction: evaluating whether a gene causes disease vs. whether a mutation breaks a gene.</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">1. GENE-LEVEL CLINICAL VALIDITY (CLINGEN)</div>
+      <div class="card-text" style="margin-bottom: 12px;">Evaluates the fundamental biological relationship: Does variation in Gene X cause Disease Y?</div>
+      <div class="card-text" style="line-height: 1.7;">
+        • <b style="color: #10B981;">Definitive:</b> Overwhelming human genetic & experimental replication.<br>
+        • <b style="color: #10B981;">Strong:</b> Substantial genetic evidence; pending additional families.<br>
+        • <b style="color: #55B9FF;">Moderate:</b> Preliminary evidence; biologically plausible.<br>
+        • <b style="color: #F59E0B;">Limited:</b> Weak evidence; 1–2 isolated case reports.<br>
+        • <b style="color: #EF4444;">Disputed:</b> Conflicting evidence; subsequent studies fail to reproduce link.<br>
+        • <b style="color: #EF4444;">Refuted:</b> Disproven! Robust case-control studies rule out causality.
+      </div>
+    </div>
+    <div class="card" style="border-top: 4px solid #55B9FF;">
+      <div class="card-title">2. VARIANT-LEVEL PATHOGENICITY (CLINVAR / ACMG)</div>
+      <div class="card-text" style="margin-bottom: 12px;">Evaluates a specific typographical change in a gene: Does this particular mutation impair protein function?</div>
+      <div class="card-text" style="line-height: 1.7;">
+        • <b style="color: #EF4444;">Pathogenic (P):</b> Proven causal mutation altering critical protein domains.<br>
+        • <b style="color: #EF4444;">Likely Pathogenic (LP):</b> >90% certainty of being disease-causing.<br>
+        • <b style="color: #F59E0B;">Variant of Uncertain Significance (VUS):</b> Unknown clinical effect.<br>
+        • <b style="color: #10B981;">Likely Benign (LB):</b> >90% probability of being harmless neutral variation.<br>
+        • <b style="color: #10B981;">Benign (B):</b> Proven harmless; occurs frequently in healthy populations.
+      </div>
+      <div style="margin-top: 16px; padding: 12px; background: #122A4A; border-left: 3px solid #F59E0B; font-size: 9pt; color: #FFFFFF;">
+        <b>THE LOGICAL DEPENDENCY TRAP:</b> Variant pathogenicity is conditionally predicated on gene validity. If a gene is Disputed or Refuted for a disease, NO variant within that gene can legitimately be classified as Pathogenic for that disease!
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 05 of 25</span></div>
+</div>
+
+<!-- SLIDE 6: THE DATA ECOSYSTEM -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">05 // DATA ECOSYSTEM</div>
+  <div class="header-title">The Fragmented Clinical Genomics Data Ecosystem</div>
+  <div class="header-subtitle">Multiple authoritative databases operating on different granularities, ontologies, and cadences.</div>
+  <div class="grid-4" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">ClinGen</div>
+      <div style="font-size: 9pt; color: #36D6C5; margin-bottom: 8px;">Expert Consensus Panels</div>
+      <div class="card-text">• Unit: Gene–Disease Dyad (G, D)<br>• Ontology: MONDO Disease Ontology<br>• Curates: 6 Clinical Validity Tiers<br>• Cadence: Multi-year expert reviews<br>• Limitation: Does not curate variant-level submissions directly.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #55B9FF;">
+      <div class="card-title">NCBI ClinVar</div>
+      <div style="font-size: 9pt; color: #55B9FF; margin-bottom: 8px;">Variant Assertion Archive</div>
+      <div class="card-text">• Unit: Allelic Variant (G, V)<br>• Ontology: MedGen, OMIM, Free-Text<br>• Curates: ACMG 5-Tier Pathogenicity<br>• Cadence: Continuous voluntary lab deposits<br>• Limitation: Archival; does not re-curate when gene validity shifts.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #A855F7;">
+      <div class="card-title">PanelApp</div>
+      <div style="font-size: 9pt; color: #A855F7; margin-bottom: 8px;">Diagnostic Test Menus</div>
+      <div class="card-text">• Unit: Gene Panel Membership (G, P)<br>• Ontology: Clinical Indication Codes<br>• Curates: Green, Amber, Red Tiers<br>• Cadence: Periodic reviews for NHS test directories<br>• Limitation: Bed files lag upstream ClinGen determinations.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #10B981;">
+      <div class="card-title">gnomAD</div>
+      <div style="font-size: 9pt; color: #10B981; margin-bottom: 8px;">Population Reference</div>
+      <div class="card-text">• Unit: Allele Frequency (AF)<br>• Ontology: Continental Ancestries (v4)<br>• Curates: Frequencies in 800k+ individuals<br>• Cadence: Multi-year major reference drops<br>• Limitation: Lacks clinical disease phenotypes.</div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 06 of 25</span></div>
+</div>
+
+<!-- SLIDE 7: WHY EVIDENCE DISAGREES -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">06 // ROOT CAUSE ANALYSIS</div>
+  <div class="header-title">Why Clinical Evidence Disagrees: Four Structural Barriers</div>
+  <div class="header-subtitle">Analyzing the semantic, organizational, and temporal reasons discrepancies persist.</div>
+  <div class="grid-4" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="stat-lbl" style="color: #36D6C5;">BARRIER 1</div>
+      <div class="card-title" style="margin-top: 6px;">Granularity Mismatch</div>
+      <div class="card-text">ClinGen evaluates the gene entity (G). ClinVar tracks the variant entity (V). PanelApp tracks panels (P).<br><br>Without a relational bridge connecting variant records to gene validity determinations, updates at the gene level remain invisible to variant pipelines.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #55B9FF;">
+      <div class="stat-lbl" style="color: #55B9FF;">BARRIER 2</div>
+      <div class="card-title" style="margin-top: 6px;">Ontological Divergence</div>
+      <div class="card-text">A disease in ClinGen may be recorded as 'Hypertrophic cardiomyopathy 1' (MONDO:0005045), while ClinVar labels variants as 'Familial hypertrophic cardiomyopathy' (MedGen:C0007194) or 'Cardiovascular phenotype'.<br><br>Direct string matching fails across >60% of entries.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #F59E0B;">
+      <div class="stat-lbl" style="color: #F59E0B;">BARRIER 3</div>
+      <div class="card-title" style="margin-top: 6px;">Asynchronous Cadence</div>
+      <div class="card-text">ClinGen expert panels meet periodically to review specific domains (e.g. Arrhythmia in 2021, Cardiomyopathy in 2024).<br><br>Commercial diagnostic labs lack staff to manually re-curate historical variant submissions, leaving stale assertions active for years.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #EF4444;">
+      <div class="stat-lbl" style="color: #EF4444;">BARRIER 4</div>
+      <div class="card-title" style="margin-top: 6px;">Missing Assertions</div>
+      <div class="card-text">Many downgraded genes lack variant submissions in public archives because commercial labs treat internal testing data as proprietary.<br><br>In our benchmark audit, 47% of false negatives occurred simply because the local database snapshot contained zero variant records.</div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 07 of 25</span></div>
+</div>
+
+<!-- SLIDE 8: EXISTING WORKFLOWS & RESEARCH GAP -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">07 // RESEARCH GAP</div>
+  <div class="header-title">Existing Workflows vs. CuraCascade: The Automated Audit Gap</div>
+  <div class="header-subtitle">Comparing manual clinical curation against CuraCascade's automated cross-layer architecture.</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #F59E0B;">
+      <div class="card-title" style="color: #F59E0B;">EXISTING CLINICAL WORKFLOWS (MANUAL & SILOED)</div>
+      <div class="card-text" style="line-height: 1.7;">
+        • <b>Ad-Hoc Manual Checking:</b> Geneticists manually look up genes on ClinGen website when a suspicious report is questioned.<br>
+        • <b>Static Commercial VCF Annotations:</b> Pipelines annotate variants using static ClinVar VCF drops, inheriting stale classifications without validity validation.<br>
+        • <b>Gene-Only Lookup Traps:</b> Simple lookup scripts flag all variants in a downgraded gene, generating false alarms on pleiotropic multi-disease genes.<br>
+        • <b>No Systematic Remediation:</b> Laboratories lack automated tools to export formal clinical governance dossiers (.md) citing ClinGen GCEP determination reports.
+      </div>
+    </div>
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title" style="color: #36D6C5;">THE CURACASCADE AUTOMATED ARCHITECTURE</div>
+      <div class="card-text" style="line-height: 1.7;">
+        • <b>Automated Multi-Source Join:</b> Relational integration linking ClinGen validity to ClinVar variants, PanelApp tiers, and gnomAD frequencies.<br>
+        • <b>Disease-Aware Ontology Crosswalk:</b> Harmonizes MONDO and MedGen IDs; suppresses false alarms for distinct diseases in multi-disease genes.<br>
+        • <b>Quantitative Population Refutation:</b> Automatically computes MCAF thresholds to identify variants occurring at implausibly high frequencies in healthy cohorts.<br>
+        • <b>ISO 15189 Clinical Dossiers:</b> Generates structured clinical governance audit dossiers with explicit submitter and panel remediation directives.
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 08 of 25</span></div>
+</div>
+
+<!-- SLIDE 9: PROJECT OBJECTIVES & SCOPE -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">08 // OBJECTIVES & SCOPE</div>
+  <div class="header-title">Project Scope, Objectives & Operational Boundaries</div>
+  <div class="header-subtitle">Clear demarcation of engineering goals, target user personas, and strict non-goals.</div>
+  <div class="grid-3" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">1. CORE ENGINEERING OBJECTIVES</div>
+      <div class="card-text" style="line-height: 1.6;">
+        • <b>Ingest & Harmonize:</b> Multi-source ETL pipelines for ClinGen, ClinVar, PanelApp, and gnomAD.<br><br>
+        • <b>Disease-Aware Auditing:</b> Materialize Class A, B, and C discrepancies using ontology crosswalks.<br><br>
+        • <b>Population Genetics Filter:</b> Evaluate variant frequencies against Whiffin et al. MCAF thresholds.<br><br>
+        • <b>Clinical Decision Support:</b> Deliver interactive Streamlit web dashboard and headless CLI (run.py).
+      </div>
+    </div>
+    <div class="card" style="border-top: 4px solid #55B9FF;">
+      <div class="card-title">2. INTENDED USER PERSONAS</div>
+      <div class="card-text" style="line-height: 1.6;">
+        • <b>Clinical Laboratory Geneticists:</b> Reviewing variant lists prior to signing out diagnostic reports.<br><br>
+        • <b>Diagnostic Panel Curators:</b> Updating hospital gene test directories and exome filtering BED files.<br><br>
+        • <b>Quality Assurance Auditors:</b> Reviewing historical laboratory assertion archives for re-curation triage.<br><br>
+        • <b>Biomedical Researchers:</b> Investigating evidence propagation kinetics across clinical corpora.
+      </div>
+    </div>
+    <div class="card" style="border-top: 4px solid #EF4444;">
+      <div class="card-title" style="color: #EF4444;">3. STRICT NON-GOALS & BOUNDARIES</div>
+      <div class="card-text" style="line-height: 1.6; color: #FFFFFF;">
+        WHAT CURACASCADE IS NOT:<br><br>
+        • <b>NOT an Autonomous Diagnostic Device:</b> It does not diagnose patients or make independent clinical decisions.<br><br>
+        • <b>NOT a Black-Box AI:</b> Audit classifications are deterministic, rule-based, and evidence-linked.<br><br>
+        • <b>NOT Clinically Validated:</b> No prospective human clinical trials or FDA clearances are claimed.<br><br>
+        • <b>Decision Support Only:</b> Triage tool assisting human clinical experts.
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 09 of 25</span></div>
+</div>
+
+<!-- SLIDE 10: CONTRIBUTIONS & RESEARCH QUESTIONS -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">09 // CONTRIBUTIONS</div>
+  <div class="header-title">Key Research Questions & Genuine Project Contributions</div>
+  <div class="header-subtitle">Defining the scientific questions answered and the tangible engineering deliverables.</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="stat-lbl" style="color: #36D6C5;">RESEARCH QUESTION 1</div>
+      <div class="card-title" style="margin-top: 4px;">How widespread are unpropagated gene downgrades?</div>
+      <div class="card-text">• Contribution: Quantified evidence propagation latency across 51,025 ClinVar assertions, revealing an overall median lag of 2.82 years (1,030 days) and 182,760 cumulative patient-years at risk.<br>• Proved that Class B limited-evidence genes linger significantly longer than Class A (3.77 vs 2.80 yrs, p < 0.001).</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #55B9FF;">
+      <div class="stat-lbl" style="color: #55B9FF;">RESEARCH QUESTION 2</div>
+      <div class="card-title" style="margin-top: 4px;">Can automated joins detect discrepancies without alert fatigue?</div>
+      <div class="card-text">• Contribution: Designed a 3-tier disease-aware matching heuristic using MONDO-MedGen crosswalks and keyword exclusion guards.<br>• Validated on a 100-gene independent benchmark: achieved 100.0% precision (18/18 TP, zero false alarms) on evaluable cases, completely ruling out 42 definitive controls.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #10B981;">
+      <div class="stat-lbl" style="color: #10B981;">RESEARCH QUESTION 3</div>
+      <div class="card-title" style="margin-top: 4px;">Can population frequencies independently refute assertions?</div>
+      <div class="card-text">• Contribution: Integrated gnomAD v4 continental allele frequencies with Whiffin et al. MCAF formulations across Orphanet prevalence estimates.<br>• Demonstrated that 89.3% of audited Class A variants in downgraded genes exceed the MCAF pathogenic ceiling (e.g., KCNE2 175x excess).</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #A855F7;">
+      <div class="stat-lbl" style="color: #A855F7;">RESEARCH QUESTION 4</div>
+      <div class="card-title" style="margin-top: 4px;">Can machine learning prioritize genes for re-appraisal?</div>
+      <div class="card-text">• Contribution: Trained an exploratory Balanced Random Forest across 7 engineered features, achieving an AUROC of 0.857 and Brier score of 0.1508.<br>• Identified Curation Age Elapsed (78.4% perm. wt) as the primary risk driver while transparently disclosing retrospective temporal leakage limits.</div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 10 of 25</span></div>
+</div>
+
+<!-- SLIDE 11: 5-STAGE PIPELINE -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">10 // PIPELINE ARCHITECTURE</div>
+  <div class="header-title">Deterministic 5-Stage Cross-Layer Audit Pipeline</div>
+  <div class="header-subtitle">End-to-end automated framework ingesting, harmonizing, auditing, and triaging genomic discrepancies.</div>
+  <div class="grid-5" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="stat-lbl" style="color: #36D6C5;">STAGE 01</div>
+      <div class="card-title" style="margin-top: 6px;">Multi-Source Ingestion</div>
+      <div class="card-text">Automated ETL fetchers pull raw ClinGen GCEP curations, ClinVar variant drops, PanelApp panel APIs, and gnomAD v4 frequencies with cryptographic SHA-256 provenance logging.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #55B9FF;">
+      <div class="stat-lbl" style="color: #55B9FF;">STAGE 02</div>
+      <div class="card-title" style="margin-top: 6px;">Ontology Normalization</div>
+      <div class="card-text">Standardizes disparate disease terminology via a 3-tier MONDO-to-MedGen concept crosswalk. Resolves canonical HGNC symbols and prevents pleiotropic cross-disease conflation.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #A855F7;">
+      <div class="stat-lbl" style="color: #A855F7;">STAGE 03</div>
+      <div class="card-title" style="margin-top: 6px;">3NF Relational Warehouse</div>
+      <div class="card-text">Dual-engine architecture: Normalized SQLite 3NF relational database for strict transactional consistency + DuckDB OLAP views for rapid analytical join aggregation.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #EF4444;">
+      <div class="stat-lbl" style="color: #EF4444;">STAGE 04</div>
+      <div class="card-title" style="margin-top: 6px;">Cascade Audit Engine</div>
+      <div class="card-text">Deterministic rule-based joining of upstream ClinGen downgrades with downstream ClinVar P/LP assertions and PanelApp Green tiers. Materializes Class A, B, and C discrepancy findings.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #10B981;">
+      <div class="stat-lbl" style="color: #10B981;">STAGE 05</div>
+      <div class="card-title" style="margin-top: 6px;">Decision Support</div>
+      <div class="card-text">Interactive Streamlit web portal, automated command-line interface (run.py), and ISO 15189 compliant clinical governance dossiers (.md) for laboratory re-curation triage.</div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 11 of 25</span></div>
+</div>
+
+<!-- SLIDE 12: SYSTEM ARCHITECTURE -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">11 // SYSTEM ARCHITECTURE</div>
+  <div class="header-title">System Architecture: Dual-Engine Data Warehouse</div>
+  <div class="header-subtitle">Coupling SQLite transactional 3NF integrity with DuckDB columnar analytical aggregation.</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div style="display: flex; align-items: center; justify-content: center;">
+      <img src="{arch}" class="screenshot-img" style="max-height: 4.6in; object-fit: contain;">
+    </div>
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">FOUR-PILLAR ARCHITECTURAL RIGOR</div>
+      <div class="card-text" style="line-height: 1.6;">
+        • <b style="color: #55B9FF;">1. Transactional Integrity (SQLite):</b> Strict Third Normal Form (3NF) relational schema with 9 tables, cascading foreign keys, compound indexes on (gene_symbol, disease_id), and automated uniqueness constraints.<br><br>
+        • <b style="color: #55B9FF;">2. Analytical OLAP Acceleration (DuckDB):</b> In-memory columnar query engine executing complex multi-database joins across 50,000+ variants in sub-10ms response times for real-time dashboard responsiveness.<br><br>
+        • <b style="color: #55B9FF;">3. Cryptographic Provenance:</b> Dedicated provenance audit table capturing SHA-256 checksums, snapshot dates, and transformation versioning for full ISO 15189 reproducibility.<br><br>
+        • <b style="color: #55B9FF;">4. Dual Execution Modality:</b> Fully headless command-line interface (run.py) for automated CI/CD bioinformatics pipelines alongside an interactive clinical decision support dashboard in Streamlit.
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 12 of 25</span></div>
+</div>
+
+<!-- SLIDE 13: RELATIONAL SCHEMA (3NF) -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">12 // RELATIONAL SCHEMA</div>
+  <div class="header-title">Relational Schema & Entity-Relationship Architecture (3NF)</div>
+  <div class="header-subtitle">Third Normal Form normalized relational structure linking upstream curation with downstream assertions.</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div style="display: flex; align-items: center; justify-content: center;">
+      <img src="{s15}" class="screenshot-img" style="max-height: 4.6in; object-fit: contain;">
+    </div>
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">3NF RELATIONAL SPECIFICATIONS</div>
+      <div class="card-text" style="line-height: 1.6;">
+        • <b style="color: #55B9FF;">Third Normal Form (3NF) Elimination of Anomalies:</b> Non-key attributes depend strictly on primary keys. Eliminates insertion, update, and deletion anomalies across genes, diseases, curations, and variant records.<br><br>
+        • <b style="color: #55B9FF;">Referential Integrity & Cascading Constraints:</b> Strict Foreign Key enforcement: deleting a gene or disease cascades predictably without creating orphaned variant records. Enforced via SQLite PRAGMA foreign_keys = ON.<br><br>
+        • <b style="color: #55B9FF;">Compound Indexing for Join Acceleration:</b> B-tree composite indexes on (gene_symbol, disease_id) and (gene_symbol, variation_id) optimize join resolution, reducing query plan scan cost from O(N) to O(log N).<br><br>
+        • <b style="color: #10B981;">Dual Scale Modes:</b> Showcase Mode (36 genes, 34 findings) vs. Full Corpus Mode (3,033 genes, 51,025 variants, 51,251 findings).
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 13 of 25</span></div>
+</div>
+
+<!-- SLIDE 14: DATA INGESTION & PROVENANCE -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">13 // DATA INGESTION & ETL</div>
+  <div class="header-title">Data Ingestion, Normalization & Forensic Provenance</div>
+  <div class="header-subtitle">Extracting, parsing, standardizing, and tracking multi-source biomedical data with cryptographic reproducibility.</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">1. MULTI-SOURCE INGESTION & ETL ARCHITECTURE</div>
+      <div class="card-text" style="line-height: 1.6;">
+        • <b>ClinGen GCEP Fetcher:</b> Parses ClinGen Gene-Disease Validity CSV releases; maps curation records into structured validity tiers (Definitive to Refuted) and extracts appraisal dates.<br><br>
+        • <b>ClinVar Variant Parser:</b> Parses ClinVar tab-delimited summary releases; extracts variation_id, HGVS expressions, review stars (0 to 4), and ACMG clinical significance.<br><br>
+        • <b>PanelApp REST API Client:</b> Queries Genomics England PanelApp REST API endpoints; retrieves panel entities, versions, and Green/Amber/Red confidence tiers.<br><br>
+        • <b>gnomAD v4 Population Pipeline:</b> Extracts global and continental population allele frequencies; maps maximum population AF (popmax) for quantitative burden evaluation.
+      </div>
+    </div>
+    <div class="card" style="border-top: 4px solid #55B9FF;">
+      <div class="card-title">2. CRYPTOGRAPHIC PROVENANCE & ERROR HANDLING</div>
+      <div class="card-text" style="line-height: 1.6;">
+        • <b style="color: #10B981;">SHA-256 Checksum Verification:</b> Every ingested raw dataset is hashed with SHA-256 upon arrival; hashes are stored in the provenance table to guarantee byte-for-byte reproducibility.<br><br>
+        • <b>Defensive Error Handling:</b> ETL fetchers implement exponential backoff retry logic, schema validation checks, and automatic fallback to verified local static archives if remote APIs fail.<br><br>
+        • <b>HGNC Symbol Harmonization:</b> Resolves historical gene synonyms, outdated aliases, and withdrawn symbols against the canonical HGNC database (e.g. mapping GJB6, MYLK2, ACTN2).<br><br>
+        • <b>Idempotent Schema Migrations:</b> Database creation and migration scripts are strictly idempotent; re-running ingestion cleans and rebuilds tables without duplicate primary key collisions.
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 14 of 25</span></div>
+</div>
+
+<!-- SLIDE 15: DISEASE-AWARE MATCHING -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">14 // MATCHING LOGIC</div>
+  <div class="header-title">Disease-Aware Ontology Matching & Crosswalk Heuristics</div>
+  <div class="header-subtitle">Preventing catastrophic false-positive alerts on pleiotropic multi-disease genes.</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #EF4444;">
+      <div class="card-title" style="color: #EF4444;">THE FATAL FLAW OF GENE-SYMBOL-ONLY MATCHING</div>
+      <div class="card-text" style="line-height: 1.6;">
+        In human genetics, a single gene frequently causes multiple completely distinct diseases (pleiotropy).<br><br>
+        <b>Consider ACTN2 (Actinin Alpha 2):</b><br>
+        • Disease A: Hypertrophic Cardiomyopathy (HCM) → ClinGen: <span style="color: #EF4444; font-weight: 700;">DISPUTED</span>.<br>
+        • Disease B: Distal Myopathy (Muscle weakness) → ClinGen: <span style="color: #10B981; font-weight: 700;">DEFINITIVE</span>.<br><br>
+        If an algorithm matches solely by gene symbol 'ACTN2', it sees a Disputed evaluation and falsely invalidates all variants for Distal Myopathy! This would deprive muscular dystrophy patients of life-saving molecular diagnoses.<br><br>
+        <b style="color: #10B981;">CuraCascade Solution:</b> The unit of analysis is strictly the <b>Gene–Disease Dyad (G, D)</b>, never the gene alone.
+      </div>
+    </div>
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">CURACASCADE 3-TIER MATCHING HIERARCHY</div>
+      <div class="card-text" style="line-height: 1.6;">
+        • <b style="color: #55B9FF;">TIER 1: Exact Ontology Concept Crosswalk:</b> Direct mapping between ClinGen MONDO identifier and ClinVar MedGen / OMIM concept ID via curated crosswalk dictionary (ontology_crosswalk.py). Match Confidence = HIGH.<br><br>
+        • <b style="color: #55B9FF;">TIER 2: Substring Matching with Keyword Exclusion Guards:</b> When concept IDs are absent, performs normalized string matching but enforces strict negative keyword guards (e.g. 'hypertrophic cardiomyopathy' does NOT match 'distal myopathy'; 'Brugada' does NOT match 'Long QT'). Match Confidence = MEDIUM.<br><br>
+        • <b style="color: #55B9FF;">TIER 3: Fallback & Review Required:</b> Unmapped or generalized disease terms (e.g. 'Cardiovascular phenotype') are marked as REVIEW_REQUIRED and excluded from automatic discrepancy flagging to protect precision.
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 15 of 25</span></div>
+</div>
+
+<!-- SLIDE 16: LIVE PORTAL OVERVIEW -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">15 // SOFTWARE DEMONSTRATION</div>
+  <div class="header-title">Live Clinical Decision Support Portal: System Overview</div>
+  <div class="header-subtitle">Interactive laboratory interface deployed on Streamlit Cloud (curacascadev2.streamlit.app).</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div style="display: flex; flex-direction: column; gap: 12px; justify-content: center;">
+      <img src="{s1}" class="screenshot-img" style="max-height: 2.2in; object-fit: contain;">
+      <img src="{s20}" class="screenshot-img" style="max-height: 2.2in; object-fit: contain;">
+    </div>
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">VERIFIED DEPLOYED CAPABILITIES</div>
+      <div class="card-text" style="line-height: 1.6;">
+        • <b style="color: #55B9FF;">1. Real-Time Operational Telemetry:</b> Upper Screenshot: Showcase Mode live HUD displaying 36 Curated Genes, 46 ClinVar Variants, 25 Panels, and 34 Materialized Inconsistencies with 202.5 patient-years at risk.<br><br>
+        • <b style="color: #55B9FF;">2. Real-World Scaling (Full Corpus Mode):</b> Lower Screenshot: Seamless scaling to 3,033 Genes, 51,025 Variants, and 51,251 Discrepancies (34,800 Class A, 16,350 Class B) with 182,760.4 patient-years at risk.<br><br>
+        • <b style="color: #55B9FF;">3. Database Layer Selector:</b> Interactive sidebar toggle allowing clinical geneticists to switch instantaneously between the curated benchmark demonstration set and the 50k+ full-scale corpus.<br><br>
+        • <b style="color: #55B9FF;">4. Seven Interactive Functional Sections:</b> Complete laboratory navigation: Audit Explorer (01), Gene Detail & Timeline (02), Aggregate Analytics (03), Downgrade Forecast (04), and Clinical Methodology (05).
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 16 of 25</span></div>
+</div>
+
+<!-- SLIDE 17: AUDIT EXPLORER -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">16 // AUDIT EXPLORER</div>
+  <div class="header-title">Interactive Inconsistency Audit Explorer & Multi-Tier Filtering</div>
+  <div class="header-subtitle">Materialized discrepancy table with multi-dimensional filtering, search, and CSV export.</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div style="display: flex; flex-direction: column; gap: 12px; justify-content: center;">
+      <img src="{s2}" class="screenshot-img" style="max-height: 2.2in; object-fit: contain;">
+      <img src="{s21}" class="screenshot-img" style="max-height: 2.2in; object-fit: contain;">
+    </div>
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">INTERACTIVE TRIAGE CAPABILITIES</div>
+      <div class="card-text" style="line-height: 1.6;">
+        • <b style="color: #55B9FF;">Multi-Dimensional Filtering:</b> Filter instantly by Inconsistency Class (Class A Critical, Class B High, Class C Critical), target database layer (ClinVar Variant vs. PanelApp Panel), and prescriptive action.<br><br>
+        • <b style="color: #55B9FF;">Instant Gene Symbol Search:</b> Search any gene symbol (e.g. SCN1B, MYLK2, KCNE2, GJB6) to isolate specific clinical panels or variants undergoing laboratory re-curation.<br><br>
+        • <b style="color: #55B9FF;">Temporal Sorting by Latency:</b> Sort findings by longest unresolved latency days to immediately identify historical candidate genes with the longest uncorrected clinical propagation lags.<br><br>
+        • <b style="color: #10B981;">Automated CSV Export for Lab LIMS:</b> One-click 'Export CSV' button generates full cohort exports with all HGVS variants, review stars, MCAF ratios, and ClinGen report URLs for direct laboratory LIMS integration.
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 17 of 25</span></div>
+</div>
+
+<!-- SLIDE 18: EVIDENCE TRACEABILITY & REMEDIATION -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">17 // CLINICAL GOVERNANCE</div>
+  <div class="header-title">Evidence Traceability & Prescriptive Clinical Remediation</div>
+  <div class="header-subtitle">Translating automated audit discrepancies into actionable laboratory directives and ISO 15189 dossiers.</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div style="display: flex; align-items: center; justify-content: center;">
+      <img src="{s17}" class="screenshot-img" style="max-height: 4.6in; object-fit: contain;">
+    </div>
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">ACTIONABLE CLINICAL DIRECTIVES</div>
+      <div class="card-text" style="line-height: 1.6;">
+        • <b style="color: #EF4444;">Class A Directive (Disputed / Refuted + P/LP):</b> Submitter Action: Formal retraction or downgrade to VUS citing ClinGen GCEP determination report URL. Clinical Governance: Audit historical index cases; cease predictive cascade testing in family members; issue amended reports.<br><br>
+        • <b style="color: #F59E0B;">Class B Directive (Limited Evidence + P/LP):</b> Submitter Action: Apply ACMG Guidance Cap (Maximum VUS) until replicated human genetic proof emerges. Diagnostic Directive: Restrict panel reporting to Amber tier; require senior clinical geneticist sign-off.<br><br>
+        • <b style="color: #EF4444;">Class C Directive (PanelApp Green in Disputed/Refuted):</b> Diagnostic Action: Immediate Demotion to Red Tier. Pipeline Directive: Remove genomic coordinates from routine exome/panel filtering BED files; prevent automated primary diagnostic sign-outs.<br><br>
+        • <b style="color: #10B981;">Automated Clinical Dossiers:</b> Generates ISO 15189 compliant markdown audit dossiers (.md) capturing full evidence lineage, SHA-256 hashes, and actionable sign-off checklists.
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 18 of 25</span></div>
+</div>
+
+<!-- SLIDE 19: WORKED CLINICAL CASE STUDIES -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">18 // CLINICAL CASE STUDIES</div>
+  <div class="header-title">Worked Case Studies: Discrepancy Auditing in SCN1B, MYLK2 & ACTN2</div>
+  <div class="header-subtitle">Detailed examination of real-world evidence cascades across cardiac and neuromuscular disorders.</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div style="display: flex; flex-direction: column; gap: 12px; justify-content: center;">
+      <img src="{s4}" class="screenshot-img" style="max-height: 2.2in; object-fit: contain;">
+      <img src="{s3}" class="screenshot-img" style="max-height: 2.2in; object-fit: contain;">
+    </div>
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">REAL-WORLD CLINICAL AUDIT FINDINGS</div>
+      <div class="card-text" style="line-height: 1.6;">
+        • <b style="color: #EF4444;">SCN1B — Brugada Syndrome (Class A Finding):</b><br>
+        - Upstream Status: DISPUTED in 2021 by ClinGen Arrhythmia GCEP.<br>
+        - Downstream Status: 18 ClinVar Pathogenic / Likely Pathogenic assertions remain active.<br>
+        - Clinical Hazard: Risk of false-positive diagnosis and unwarranted prophylactic ICD heart surgery in asymptomatic patients.<br><br>
+        • <b style="color: #EF4444;">MYLK2 — Hypertrophic Cardiomyopathy (Class C Finding):</b><br>
+        - Upstream Status: DISPUTED in 2024 by ClinGen Cardiomyopathy GCEP.<br>
+        - Downstream Status: Listed as GREEN (diagnostic-grade) on PanelApp panels.<br>
+        - Clinical Hazard: Stale coordinates remain in exome filtering BED files in NHS GMS pipelines.<br><br>
+        • <b style="color: #F59E0B;">ACTN2 — Pleiotropic Disease Specificity:</b><br>
+        - Demonstrated above: CuraCascade identifies ACTN2 as Disputed for HCM while confirming it as Definitive for Distal Myopathy, suppressing false alerts for muscle disease.
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 19 of 25</span></div>
+</div>
+
+<!-- SLIDE 20: BENCHMARK METHODOLOGY -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">19 // VALIDATION METHODOLOGY</div>
+  <div class="header-title">Empirical 100-Gene Adjudication Validation Benchmark</div>
+  <div class="header-subtitle">Independent expert validation cohort evaluating classifier precision, recall, and label boundaries.</div>
+  <div class="grid-3" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">1. GOLD-STANDARD COMPOSITION</div>
+      <div class="card-text" style="line-height: 1.6;">
+        The benchmark comprises 100 independently frozen Gene-Disease Clinical Validity Assertions (G, D):<br><br>
+        • <b>54 Published Downgraded Genes:</b> Verified from peer-reviewed literature and ClinGen GCEPs (Cardiomyopathy, Arrhythmia, Hereditary Cancer, Neurodevelopmental).<br><br>
+        • <b>46 Definitive Clinical Controls:</b> Unquestioned gene-disease associations (ACMG SF v3.2 / National Genomic Test Directory, e.g. BRCA1, TP53, MLH1, CFTR).
+      </div>
+    </div>
+    <div class="card" style="border-top: 4px solid #55B9FF;">
+      <div class="card-title">2. COHORT PARTITIONING</div>
+      <div class="card-text" style="line-height: 1.6;">
+        To maintain statistical integrity, cases are strictly partitioned:<br><br>
+        • <b>Evaluable Cohort (N = 94):</b> Target genes and curation records are present in the warehouse snapshot, permitting empirical join evaluation.<br><br>
+        • <b>Excluded Cases (N = 6):</b> Designated as NOT_EVALUABLE due to complete absence of gene or curation records in the static snapshot (XRCC3, DFNB59, TSC1, TSC2, SMAD3, SMN1).
+      </div>
+    </div>
+    <div class="card" style="border-top: 4px solid #10B981;">
+      <div class="card-title">3. LABEL FIREWALL & RIGOR</div>
+      <div class="card-text" style="line-height: 1.6;">
+        Strict adherence to scientific evaluation protocols:<br><br>
+        • <b>Zero Hardcoded Predictions:</b> Overrides (KNOWN_FN, KNOWN_FP) completely removed.<br><br>
+        • <b>Live Query Execution:</b> Queries execute dynamically against SQLite.<br><br>
+        • <b>Wilson Score 95% CIs:</b> Binomial performance intervals computed analytically.<br><br>
+        • <b>Classifier Concordance:</b> Inter-rater agreement measured via Cohen's kappa.
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 20 of 25</span></div>
+</div>
+
+<!-- SLIDE 21: QUANTITATIVE BENCHMARK RESULTS -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">20 // BENCHMARK RESULTS</div>
+  <div class="header-title">Empirical Results: The Precision–Recall Trade-Off</div>
+  <div class="header-subtitle">Conservative disease matching achieves zero false positives (100% PPV) at the cost of moderate recall.</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">EVALUABLE COHORT CONFUSION MATRIX (N = 94)</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0;">
+        <div style="background: #122A4A; border: 1.5px solid #10B981; border-radius: 6px; padding: 12px; text-align: center;">
+          <div class="stat-lbl" style="color: #10B981;">TRUE POSITIVES (TP)</div>
+          <div class="stat-val">18</div>
+          <div class="stat-sub">Correctly flagged discrepancies</div>
+        </div>
+        <div style="background: #122A4A; border: 1.5px solid #36D6C5; border-radius: 6px; padding: 12px; text-align: center;">
+          <div class="stat-lbl" style="color: #36D6C5;">FALSE POSITIVES (FP)</div>
+          <div class="stat-val">0</div>
+          <div class="stat-sub">Zero false alarms raised</div>
+        </div>
+        <div style="background: #122A4A; border: 1.5px solid #F59E0B; border-radius: 6px; padding: 12px; text-align: center;">
+          <div class="stat-lbl" style="color: #F59E0B;">FALSE NEGATIVES (FN)</div>
+          <div class="stat-val">34</div>
+          <div class="stat-sub">Undetected discrepancies</div>
+        </div>
+        <div style="background: #122A4A; border: 1.5px solid #55B9FF; border-radius: 6px; padding: 12px; text-align: center;">
+          <div class="stat-lbl" style="color: #55B9FF;">TRUE NEGATIVES (TN)</div>
+          <div class="stat-val">42</div>
+          <div class="stat-sub">Definitive controls ruled out</div>
+        </div>
+      </div>
+      <div class="card-text" style="font-size: 8.5pt;">
+        • Denominator: 94 Evaluable (52 Gold Downgraded + 42 Definitive Controls)<br>
+        • Sensitivity Analysis (All 100): Recall = 33.3%, Accuracy = 64.0%
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <div class="card" style="border-top: 4px solid #55B9FF; padding: 14px 18px;">
+        <div class="card-title" style="font-size: 11pt; margin-bottom: 6px;">STATISTICAL METRICS (WILSON SCORE 95% CIs)</div>
+        <div class="card-text" style="line-height: 1.6; font-size: 9pt;">
+          • <b style="color: #10B981;">Precision (PPV): 100.0% [82.4%, 100.0%]</b> — Zero false alarms across all audited findings.<br>
+          • <b style="color: #F59E0B;">Recall (Sensitivity): 34.6% [23.2%, 48.2%]</b> — Moderate recall from conservative matching & missing data.<br>
+          • <b style="color: #10B981;">Specificity (TNR): 100.0% [91.6%, 100.0%]</b> — Perfect rejection of definitive clinical controls.<br>
+          • <b style="color: #55B9FF;">Concordance Kappa: κ = 0.3212 (Fair)</b> — Overall Accuracy: 63.8% [53.8%, 72.8%].
+        </div>
+      </div>
+      <img src="{s18}" class="screenshot-img" style="max-height: 2.2in; object-fit: contain;">
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 21 of 25</span></div>
+</div>
+
+<!-- SLIDE 22: FAILURE MODE ANALYSIS -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">21 // ERROR ANALYSIS</div>
+  <div class="header-title">Failure Mode Analysis: Dissecting the 34 False Negatives</div>
+  <div class="header-subtitle">Transparent scientific breakdown of why 34 benchmark discrepancies were not automatically flagged.</div>
+  <div class="grid-3" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #F59E0B;">
+      <div class="stat-lbl" style="color: #F59E0B;">CATEGORY 1: DATA AVAILABILITY</div>
+      <div class="stat-val" style="font-size: 20pt; margin: 4px 0;">16 Cases (47.1%)</div>
+      <div class="card-title" style="font-size: 10pt; color: #55B9FF;">Evidence Not in Warehouse Snapshot</div>
+      <div class="card-text">The gene-disease relationship is formally downgraded in ClinGen, but the local ClinVar snapshot contains ZERO Pathogenic/Likely Pathogenic variants for that condition, or PanelApp had already retired the panel.<br><br>• <b>Exemplar Genes:</b> RAD50, XRCC2, CACNA2D1, KCNJ8, HCN4, TRPM4, KCNE3, KCNE1.<br>• <b>Assessment:</b> An algorithm cannot flag data that does not exist in the database.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #55B9FF;">
+      <div class="stat-lbl" style="color: #55B9FF;">CATEGORY 2: PHENOTYPIC SPECIFICITY</div>
+      <div class="stat-val" style="font-size: 20pt; margin: 4px 0;">14 Cases (41.2%)</div>
+      <div class="card-title" style="font-size: 10pt; color: #55B9FF;">Ontology Disconnect & Broad Terms</div>
+      <div class="card-text">The gene is downgraded for a specific condition (e.g. Hypertrophic Cardiomyopathy), but downstream ClinVar variants are annotated under broad phenotypes (e.g. 'Cardiovascular phenotype', 'Inborn genetic diseases', or general 'Cardiomyopathy').<br><br>• <b>Exemplar Genes:</b> MYOZ2, CAV3, CSRP3, JPH2, NEXN, VCL.<br>• <b>Assessment:</b> Conservative matching deliberately refuses to guess.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #A855F7;">
+      <div class="stat-lbl" style="color: #A855F7;">CATEGORY 3: CURATION CRITERIA</div>
+      <div class="stat-val" style="font-size: 20pt; margin: 4px 0;">4 Cases (11.8%)</div>
+      <div class="card-title" style="font-size: 10pt; color: #55B9FF;">Low-Star or Conflicting Assertions</div>
+      <div class="card-text">ClinVar submissions have 0 review stars (no assertion criteria provided) or conflicting interpretations that do not meet the strict P/LP threshold required for Class A alerting.<br><br>• <b>Exemplar Genes:</b> GPD1L, CACNB2.<br>• <b>Assessment:</b> Prevents unverified, low-confidence submissions from generating critical clinical alerts.</div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 22 of 25</span></div>
+</div>
+
+<!-- SLIDE 23: RETROSPECTIVE FORECASTING & LATENCY -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">22 // EXPLORATORY ANALYTICS</div>
+  <div class="header-title">Retrospective Risk Forecasting & Evidence Latency Kinetics</div>
+  <div class="header-subtitle">Exploratory Random Forest triage modeling and cross-sectional empirical latency distribution.</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div class="card" style="border-top: 4px solid #36D6C5; padding: 14px 18px;">
+        <div class="card-title" style="font-size: 11pt; margin-bottom: 4px;">1. EXPLORATORY MACHINE LEARNING FORECASTING</div>
+        <div class="card-text" style="font-size: 8.5pt; line-height: 1.5;">
+          Trained Balanced Random Forest across 7 features (gnomAD popmax AF, low-star ratio, curation age, MCAF violations) to triage currently supported genes.<br>
+          • <b style="color: #55B9FF;">Discrimination:</b> AUROC = 0.857 (Full Corpus) / 1.000 (Curated Showcase) | Brier: 0.1508<br>
+          • <b style="color: #55B9FF;">Top Risk Driver:</b> Curation Age Elapsed (78.4% perm. wt) & MCAF Violations (10.8%)<br>
+          • <b style="color: #F59E0B;">Caveat:</b> Retrospective static snapshot discrimination; not claimed as prospective clinical predictor.
+        </div>
+      </div>
+      <img src="{s11}" class="screenshot-img" style="max-height: 2.3in; object-fit: contain;">
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div class="card" style="border-top: 4px solid #55B9FF; padding: 14px 18px;">
+        <div class="card-title" style="font-size: 11pt; margin-bottom: 4px;">2. EMPIRICAL LATENCY & SUBMITTER KINETICS</div>
+        <div class="card-text" style="font-size: 8.5pt; line-height: 1.5;">
+          Quantifying temporal propagation lag between authoritative ClinGen determinations and downstream assertion correction.<br>
+          • <b style="color: #10B981;">Overall Median Latency:</b> 2.82 Years (1,087d IQR) across 51,007 observations (536 genes)<br>
+          • <b style="color: #10B981;">Patient-Years at Risk:</b> 182,760.4 Years across 51,251 findings<br>
+          • <b style="color: #55B9FF;">Submitter Strata:</b> Class A Refuted (2.80 yrs) vs Class B Limited (3.77 yrs, p < 0.001)
+        </div>
+      </div>
+      <img src="{s24}" class="screenshot-img" style="max-height: 2.3in; object-fit: contain;">
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 23 of 25</span></div>
+</div>
+
+<!-- SLIDE 24: ENGINEERING QUALITY & TESTING -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">23 // SOFTWARE ENGINEERING</div>
+  <div class="header-title">Software Engineering Standards, Testing & Reproducibility</div>
+  <div class="header-subtitle">Verification suite, CI/CD automated gates, Docker containerization, and forensic provenance.</div>
+  <div class="grid-4" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #10B981;">
+      <div class="stat-lbl" style="color: #10B981;">TEST SUITE</div>
+      <div class="card-title" style="margin-top: 6px;">47 Passing Pytests</div>
+      <div class="card-text">Automated test suite (pytest -v) executes 47 tests across CLI commands (10), clinical dossiers (1), disease matching rules (21), database integrity (9), and statistical calculations (6).<br><br>Executed in 54.12s on Python 3.13.13 with zero failures and zero warnings.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #55B9FF;">
+      <div class="stat-lbl" style="color: #55B9FF;">CONTAINERIZATION</div>
+      <div class="card-title" style="margin-top: 6px;">Docker & CI/CD Gates</div>
+      <div class="card-text">Standardized multi-stage Dockerfile packaging Python 3.13 runtime, SQLite warehouse, and Streamlit dashboard.<br><br>GitHub Actions CI/CD workflows enforce automated linting, test execution, and SHA-256 integrity validation upon every commit.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #A855F7;">
+      <div class="stat-lbl" style="color: #A855F7;">PROVENANCE</div>
+      <div class="card-title" style="margin-top: 6px;">Cryptographic Hashes</div>
+      <div class="card-text">Every ingested external dataset (ClinGen, ClinVar, PanelApp, gnomAD) is hashed with SHA-256 upon arrival.<br><br>Database migration scripts are strictly idempotent; transaction rollbacks prevent partial database writes on network failures.</div>
+    </div>
+    <div class="card" style="border-top: 4px solid #F59E0B;">
+      <div class="stat-lbl" style="color: #F59E0B;">FUTURE WORK</div>
+      <div class="card-title" style="margin-top: 6px;">Transparent Roadmap</div>
+      <div class="card-text">Phase 2 Engineering Milestones:<br><br>• <b>Longitudinal Survival:</b> Reconstructing historical ClinVar XML releases to compute true time-to-resolution.<br>• <b>Ontology Expansion:</b> Semi-automated mapping of broad phenotype terms to boost recall.</div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 24 of 25</span></div>
+</div>
+
+<!-- SLIDE 25: CONCLUSION & DEFENSE -->
+<div class="slide">
+  <div class="top-accent-bar"></div>
+  <div class="header-category">24 // CONCLUSION & DEFENSE</div>
+  <div class="header-title">Conclusion, Project Summary & Academic Defense Q&A</div>
+  <div class="header-subtitle">Closing synthesis of scientific contributions, verified deliverables, and committee Q&A.</div>
+  <div class="grid-2" style="height: 4.8in;">
+    <div class="card" style="border-top: 4px solid #36D6C5;">
+      <div class="card-title">CORE SCIENTIFIC CONTRIBUTIONS</div>
+      <div class="card-text" style="line-height: 1.6;">
+        • <b style="color: #55B9FF;">Evidence-to-Practice Synchronization:</b> Quantified an empirical propagation lag of 2.82 years (up to 9.9 years) across 51,007 assertions, demonstrating a systemic data synchronization gap in clinical genomics.<br><br>
+        • <b style="color: #10B981;">Zero False Alarms (100.0% Precision):</b> Validated on an independent 100-gene benchmark (94 evaluable cases), achieving 100% precision with zero false alarms raised against definitive clinical controls.<br><br>
+        • <b style="color: #55B9FF;">Disease-Aware Ontology Architecture:</b> Engineered a 3-tier MONDO-to-MedGen crosswalk that successfully prevents false-positive alerts on pleiotropic multi-disease genes like ACTN2 and SCN1B.<br><br>
+        • <b style="color: #10B981;">Open-Source Reproducibility:</b> Delivered an open-source, containerized system with 47 passing tests, full SHA-256 provenance logging, and a live web deployment at curacascadev2.streamlit.app.
+      </div>
+    </div>
+    <div class="card" style="border-top: 4px solid #10B981; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div class="card-title" style="color: #10B981;">PROJECT DELIVERABLES & DEFENSE</div>
+        <div class="card-text" style="line-height: 1.7; margin-top: 10px;">
+          • <b>Live Web Application:</b><br>&nbsp;&nbsp;<a href="https://curacascadev2.streamlit.app/" style="color: #55B9FF;">https://curacascadev2.streamlit.app/</a><br>
+          • <b>Source Code Repository:</b><br>&nbsp;&nbsp;<a href="https://github.com/uditshokeen14/curacascadeV2" style="color: #55B9FF;">https://github.com/uditshokeen14/curacascadeV2</a><br>
+          • <b>Publication Report:</b><br>&nbsp;&nbsp;CuraCascade IEEE Format Publication Report (PDF)<br>
+          • <b>Verification Test Suite:</b><br>&nbsp;&nbsp;47 Passing Pytest Assertions (Python 3.13 win32)
+        </div>
+      </div>
+      <div style="border-top: 1px solid #1A365D; padding-top: 14px; text-align: center;">
+        <div style="font-size: 14pt; font-weight: 800; color: #36D6C5;">Thank you for your time and evaluation.</div>
+        <div style="font-size: 11pt; color: #FFFFFF; margin-top: 4px;">I welcome questions from the committee.</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>CuraCascade V2 &nbsp;|&nbsp; Academic Defense</span><span>Slide 25 of 25</span></div>
+</div>
+
+</body>
+</html>
+"""
+    return html
+
+
+def main():
+    print("=" * 80)
+    print("🖨️ GENERATING CURACASCADE V2 25-SLIDE HIGH-DPI STATIC VECTOR PDF")
+    print("=" * 80)
+
+    html_content = build_25slide_html()
+    HTML_OUT.write_text(html_content, encoding="utf-8")
+    print(f"✅ Generated Presentation HTML at: {HTML_OUT}")
+
+    if not CHROME_EXE.exists():
+        print(f"❌ Error: Chrome/Edge executable not found at {CHROME_EXE}")
+        sys.exit(1)
+
+    cmd = [
+        str(CHROME_EXE),
+        "--headless",
+        "--disable-gpu",
+        "--no-sandbox",
+        "--print-to-pdf-no-header",
+        f"--print-to-pdf={PDF_OUT}",
+        HTML_OUT.as_uri(),
+    ]
+
+    print("🖨️ Printing static 16:9 widescreen PDF using Chrome headless...")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        print(f"❌ Chrome print-to-pdf failed: {result.stderr}")
+        sys.exit(1)
+
+    # Copy to docs/ and mirrored locations
+    import shutil
+    shutil.copy2(PDF_OUT, DOCS_PDF)
+    shutil.copy2(PDF_OUT, REDESIGNED_PDF)
+    shutil.copy2(PDF_OUT, DOCS_REDESIGNED)
+
+    reader = pypdf.PdfReader(str(PDF_OUT))
+    num_pages = len(reader.pages)
+    file_size = PDF_OUT.stat().st_size
+
+    print("✅ Static Presentation PDF successfully generated at:")
+    print(f"   1. {PDF_OUT} ({num_pages} pages, {file_size:,} bytes)")
+    print(f"   2. {DOCS_PDF}")
+    print(f"   3. {REDESIGNED_PDF}")
+    print(f"   4. {DOCS_REDESIGNED}")
+
+
+if __name__ == "__main__":
+    main()
