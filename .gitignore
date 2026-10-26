@@ -22,8 +22,19 @@ var/
 .coverage
 htmlcov/
 .streamlit/
+
+# Large raw data files ignored, but benchmark ground truth preserved:
 data/raw/*
+!data/raw/benchmark_ground_truth.json
+
+# Processed exports:
 data/processed/*
+!data/processed/validation_metrics.json
+!data/processed/validation_cases.csv
+!data/processed/empirical_latency_summary.json
+!data/processed/audit_findings.csv
+!data/processed/cox_hazard_ratios.csv
+
 data/*.db
 data/*.db-shm
 data/*.db-wal

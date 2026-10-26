@@ -1,0 +1,3 @@
+covariate_key,covariate,hazard_ratio,ci_lower_95,ci_upper_95,median_latency_years,comparison_median_years,p_value,p_display,direction
+commercial_submitter,Submitter Type: Commercial Testing Lab vs Academic/Consortium,Empirical Latency,N/A,N/A,5.78,6.2,0.8445135297855083,0.8445,Extended Latency Observed in Commercial Labs
+discrepancy_severity,Discrepancy Severity: Class A (Refuted/Disputed) vs Class B (Limited),Empirical Latency,N/A,N/A,6.22,5.1,5.203863516429888e-05,< 0.001,Severe Class A Discrepancies Tracked Directly

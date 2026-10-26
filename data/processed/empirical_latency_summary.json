@@ -1,0 +1,98 @@
+{
+  "is_synthetic": false,
+  "provenance": "REAL_DATABASE_OBSERVATION",
+  "cohort_definition": {
+    "unit_of_analysis": "NCBI ClinVar Variant Pathogenic / Likely Pathogenic assertion in ClinGen-downgraded gene",
+    "time_origin": "ClinGen Gene-Disease Clinical Validity appraisal date (clingen_date)",
+    "follow_up_endpoint": "Static repository snapshot date (2024-10-01)",
+    "censoring_definition": "All active discrepancies are right-censored at cross-sectional snapshot date (unresolved)",
+    "eligible_observations": 51007,
+    "unique_genes_evaluated": 536,
+    "unique_variants_evaluated": 51007
+  },
+  "overall_latency": {
+    "median_days": 1030.0,
+    "median_years": 2.82,
+    "iqr_days": 1087.0,
+    "q25_days": 684.0,
+    "q75_days": 1771.0,
+    "mean_days": 1301.6,
+    "sd_days": 823.5
+  },
+  "stratified_comparisons": {
+    "submitter_stratification": {
+      "stratification_type": "multi_vs_single_submitter",
+      "cohort_a_label": "Multi-Submitter Consensus (\u22652 submitters)",
+      "cohort_a_n": 17747,
+      "cohort_a_median_days": 1022.0,
+      "cohort_a_median_years": 2.8,
+      "cohort_a_iqr_days": 1069.0,
+      "cohort_b_label": "Single-Submitter Assertion (1 submitter)",
+      "cohort_b_n": 33260,
+      "cohort_b_median_days": 1038.0,
+      "cohort_b_median_years": 2.84,
+      "cohort_b_iqr_days": 1191.0,
+      "mann_whitney_u_statistic": 300922517.5,
+      "p_value": 0.0002487388113338437,
+      "p_display": "< 0.001"
+    },
+    "submitter_type": {
+      "commercial_n": 17747,
+      "commercial_median_days": 1022.0,
+      "commercial_median_years": 2.8,
+      "commercial_iqr_days": 1069.0,
+      "academic_consortium_n": 33260,
+      "academic_consortium_median_days": 1038.0,
+      "academic_consortium_median_years": 2.84,
+      "academic_consortium_iqr_days": 1191.0,
+      "mann_whitney_u_statistic": 300922517.5,
+      "p_value": 0.0002487388113338437,
+      "p_display": "< 0.001"
+    },
+    "discrepancy_severity": {
+      "class_a_disputed_refuted_n": 34800,
+      "class_a_median_days": 1021.0,
+      "class_a_median_years": 2.8,
+      "class_b_limited_evidence_n": 16207,
+      "class_b_median_days": 1377.0,
+      "class_b_median_years": 3.77,
+      "p_value": 0.0,
+      "p_display": "< 0.001"
+    },
+    "review_star_confidence": {
+      "high_stars_ge_2_n": 16186,
+      "high_stars_median_days": 1021.0,
+      "high_stars_median_years": 2.8,
+      "low_stars_0_1_n": 34821,
+      "low_stars_median_days": 1059.0,
+      "low_stars_median_years": 2.9
+    },
+    "clinical_domain": {
+      "Cardiovascular": {
+        "n": 14551,
+        "median_days": 509.0,
+        "iqr_days": 1224.0,
+        "median_years": 1.39
+      },
+      "Hereditary Cancer": {
+        "n": 15404,
+        "median_days": 1021.0,
+        "iqr_days": 282.0,
+        "median_years": 2.8
+      },
+      "Neurology": {
+        "n": 6288,
+        "median_days": 1771.0,
+        "iqr_days": 608.0,
+        "median_years": 4.85
+      },
+      "Others": {
+        "n": 14764,
+        "median_days": 1722.0,
+        "iqr_days": 1518.0,
+        "median_years": 4.71
+      }
+    }
+  },
+  "scientific_statement": "Across 51007 verified clinical variant discrepancy records spanning 536 genes, the median cross-sectional synchronization latency was 2.82 years (median 1030 days, IQR 1087 days). Comparison between Multi-Submitter Consensus (\u22652 submitters) (median 2.80 years, N = 17747) and Single-Submitter Assertion (1 submitter) (median 2.84 years, N = 33260) yielded Mann-Whitney U p = < 0.001. Because static snapshot records reflect active unresolved discrepancies, genuine longitudinal time-to-event resolution modeling requires multi-year submission revision snapshots."
+}
