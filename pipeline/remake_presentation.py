@@ -74,7 +74,7 @@ def add_slide_fade_transition(slide):
         '  <p:fade/>'
         '</p:transition>'
     )
-    slide._element.insert(0, fade_xml)
+    slide._element.append(fade_xml)
 
 
 def add_header(slide, badge_text: str, title: str, subtitle: str, badge_color: RGBColor = TEAL_PRIMARY):
