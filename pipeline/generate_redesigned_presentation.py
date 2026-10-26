@@ -1134,39 +1134,39 @@ def build_slide_10_results(prs):
     p.font.size = Pt(9.5)
     p.font.color.rgb = TEXT_MUTED
 
-    # Right Container: Statistical Performance Metrics
-    c_right = add_card(slide, 6.75, 1.85, 5.78, 4.85, SURFACE_NAVY, SURFACE_BORDER)
-    tb2 = slide.shapes.add_textbox(Inches(7.0), Inches(2.05), Inches(5.3), Inches(4.4))
+    # Right Container: Statistical Classification Metrics Card
+    c_right = add_card(slide, 6.75, 1.85, 5.78, 2.35, SURFACE_NAVY, SURFACE_BORDER)
+    tb2 = slide.shapes.add_textbox(Inches(6.95), Inches(1.95), Inches(5.4), Inches(2.15))
     tf2 = tb2.text_frame
     tf2.word_wrap = True
 
     p = tf2.paragraphs[0]
-    p.text = "STATISTICAL CLASSIFICATION METRICS"
+    p.text = "STATISTICAL METRICS (WILSON SCORE 95% CIs)"
     p.font.size = Pt(11)
     p.font.bold = True
     p.font.color.rgb = TEAL_PRIMARY
 
     metrics = [
-        ("Precision (PPV)", "100.0%", "95% CI: [82.4%, 100.0%]", "Zero false alarms; every flagged finding represents a verified discrepancy."),
-        ("Recall (Sensitivity)", "34.6%", "95% CI: [23.2%, 48.2%]", "Moderate sensitivity due to conservative disease matching and missing assertions."),
-        ("Specificity (TNR)", "100.0%", "95% CI: [91.6%, 100.0%]", "Perfect rejection of definitive clinical controls (e.g. BRCA1, CFTR, TP53)."),
-        ("Overall Accuracy", "63.8%", "95% CI: [53.8%, 72.8%]", "Concordance across all 94 evaluable gene-disease validity assertions."),
-        ("Concordance Kappa", "0.3212", "Fair Agreement", "Classifier concordance kappa (N/A for single-curator gold truth)."),
+        ("Precision (PPV)", "100.0%", "[82.4%, 100.0%]", "Zero false alarms across all audited findings"),
+        ("Recall (Sensitivity)", "34.6%", "[23.2%, 48.2%]", "Moderate recall from conservative matching & missing data"),
+        ("Specificity (TNR)", "100.0%", "[91.6%, 100.0%]", "Perfect rejection of definitive clinical controls"),
+        ("Concordance Kappa", "0.3212", "Fair Agreement", "Overall Accuracy: 63.8% [53.8%, 72.8%]"),
     ]
 
     for name, val, ci, desc in metrics:
         p = tf2.add_paragraph()
-        p.text = f"{name}: {val}  ({ci})"
-        p.font.size = Pt(11)
+        p.text = f"• {name}: {val} {ci} — {desc}"
+        p.font.size = Pt(9.5)
         p.font.bold = True
         p.font.color.rgb = ALERT_GREEN if "100.0%" in val else (ALERT_AMBER if "34.6%" in val else CYAN_ACCENT)
-        p.space_before = Pt(5)
+        p.space_before = Pt(2)
 
-        p = tf2.add_paragraph()
-        p.text = desc
-        p.font.size = Pt(9.5)
-        p.font.color.rgb = TEXT_MUTED
-        p.space_before = Pt(1)
+    # Right Bottom: Real Live 100-Gene Adjudication Validation Benchmark Dashboard Screenshot
+    s18_img = SCREENSHOT_DIR / "cropped_s18_validation_benchmark_results.png"
+    if s18_img.exists():
+        slide.shapes.add_picture(str(s18_img), Inches(6.75), Inches(4.35), width=Inches(5.78))
+    else:
+        add_card(slide, 6.75, 4.35, 5.78, 2.45, SURFACE_NAVY, SURFACE_BORDER)
 
     add_footer(slide, 10)
     add_sequential_animations(slide, [c_cm.shape_id, c_right.shape_id])
